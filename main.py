@@ -78,17 +78,6 @@ def kill_enemies(group: pygame.sprite.Group) -> None:
     for each in group:
         if each.rect.bottom > 0:
             each.active = False
-            
-def change_music(boss: bool=False, play: bool=True) -> None:
-    if not boss:
-        pygame.mixer.music.load('sound/game_music.ogg')
-    else:
-        if random.choice([True,False]):
-            pygame.mixer.music.load('sound/base.ogg')
-        else:
-            pygame.mixer.music.load('sound/jungle.ogg')
-    if play:
-        pygame.mixer.music.play(-1)
 
 #主程序
 def main():
@@ -305,7 +294,7 @@ def main():
             var.transition = True
             var.me.bomb_action = False
             kill_enemies(var.enemies)
-            change_music(True)
+            var.change_music(True)
         elif var.boss_lv == 1 and var.score > 350000:
             var.boss_lv = 2
             var.boss_now = var.boss_lv2
@@ -314,7 +303,7 @@ def main():
             var.transition = True
             var.me.bomb_action = False
             kill_enemies(var.enemies)
-            change_music(True)
+            var.change_music(True)
         elif var.boss_lv == 2 and var.score > 750000:
             var.boss_lv = 3
             var.boss_now = var.boss_lv3
@@ -323,7 +312,7 @@ def main():
             var.transition = True
             var.me.bomb_action = False
             kill_enemies(var.enemies)
-            change_music(True)
+            var.change_music(True)
 
         screen.blit(background,(0,0))
         
@@ -438,7 +427,7 @@ def main():
                             var.me.bomb_action = False
                             var.trans_num = 0
                             var.trans_delay = 12
-                            change_music()
+                            var.change_music()
                             var.transition = False
         
 ## ------------------------------游戏结束画面-----------------------------------

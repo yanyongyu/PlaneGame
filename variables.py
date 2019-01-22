@@ -7,6 +7,7 @@ Author: yanyongyu
 __author__ = "yanyongyu"
 
 import time
+import random
 import threading
 
 import pygame
@@ -40,6 +41,17 @@ def init_bullet(fn: pygame.sprite.Sprite,
             bullets.append(fn(each, bg_size))
     return bullets
 
+def change_music(boss: bool=False, play: bool=True) -> None:
+    if not boss:
+        pygame.mixer.music.load('sound/game_music.ogg')
+    else:
+        if random.choice([True,False]):
+            pygame.mixer.music.load('sound/base.ogg')
+        else:
+            pygame.mixer.music.load('sound/jungle.ogg')
+    if play:
+        pygame.mixer.music.play(-1)
+
 def init():
     global me, bullets, update, level, supply_time, SUPPLY_TIME, is_double,\
         DOUBLE_BULLET_TIME, score, record_score, score_font, recorded, paused,\
@@ -51,7 +63,7 @@ def init():
     
     #生成我方飞机
     me = myplane.MyPlane(bg_size)
-    pygame.mixer.music.play(-1)
+    change_music()
     
     #生成子弹
     bullets = None
