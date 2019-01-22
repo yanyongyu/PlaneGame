@@ -95,7 +95,6 @@ def main():
     init_thread = var.Initializer()
     init_thread.daemon = True
     init_thread.start()
-    pygame.mixer.music.play(-1)
     clock = pygame.time.Clock()
     running = True
     var.init()
@@ -298,7 +297,7 @@ def main():
             inc_speed(var.mid_enemies, 1)
             
         #根据用户得分出现boss
-        if var.boss_lv == 0 and var.score > 50000:
+        if var.boss_lv == 0 and var.score > 100000:
             var.boss_lv = 1
             var.boss_now = var.boss_lv1
             var.boss_bullet = var.boss_bullet_1
@@ -307,7 +306,7 @@ def main():
             var.me.bomb_action = False
             kill_enemies(var.enemies)
             change_music(True)
-        elif var.boss_lv == 1 and var.score > 100000:
+        elif var.boss_lv == 1 and var.score > 350000:
             var.boss_lv = 2
             var.boss_now = var.boss_lv2
             var.boss_bullet = var.boss_bullet_2
@@ -316,7 +315,7 @@ def main():
             var.me.bomb_action = False
             kill_enemies(var.enemies)
             change_music(True)
-        elif var.boss_lv == 2 and var.score > 200000:
+        elif var.boss_lv == 2 and var.score > 750000:
             var.boss_lv = 3
             var.boss_now = var.boss_lv3
             var.boss_bullet = var.boss_bullet_3
