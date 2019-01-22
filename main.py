@@ -95,7 +95,6 @@ def main():
     init_thread = var.Initializer()
     init_thread.daemon = True
     init_thread.start()
-    pygame.mixer.music.play(-1)
     clock = pygame.time.Clock()
     running = True
     var.init()

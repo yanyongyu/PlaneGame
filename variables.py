@@ -52,6 +52,7 @@ def init():
     
     #生成我方飞机
     me = myplane.MyPlane(bg_size)
+    pygame.mixer.music.play(-1)
     
     #生成子弹
     bullets = None
