@@ -1,0 +1,264 @@
+﻿body {
+  margin:0px;
+  background-image:none;
+  position:static;
+  left:auto;
+  width:973px;
+  margin-left:0;
+  margin-right:0;
+  text-align:left;
+}
+#base {
+  position:absolute;
+  z-index:0;
+}
+#u9_img {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:872px;
+  height:655px;
+}
+#u9 {
+  border-width:0px;
+  position:absolute;
+  left:-10px;
+  top:-28px;
+  width:872px;
+  height:655px;
+}
+#u9_text {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:0px;
+  visibility:hidden;
+  word-wrap:break-word;
+}
+#u10 {
+  border-width:0px;
+  position:absolute;
+  left:77px;
+  top:29px;
+  width:480px;
+  height:114px;
+}
+#u10_input {
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:480px;
+  height:114px;
+  background-color:transparent;
+  font-family:'李旭科漫画体v1.0';
+  font-weight:400;
+  font-style:normal;
+  font-size:90px;
+  text-decoration:none;
+  color:#000000;
+  text-align:center;
+  border-color:transparent;
+  outline-style:none;
+}
+#u11 {
+  border-width:0px;
+  position:absolute;
+  left:643px;
+  top:336px;
+  width:340px;
+  height:57px;
+}
+#u11_input {
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:340px;
+  height:57px;
+  background-color:transparent;
+  font-family:'李旭科漫画体v1.0';
+  font-weight:400;
+  font-style:normal;
+  font-size:36px;
+  text-decoration:underline;
+  color:#000000;
+  text-align:center;
+  border-color:transparent;
+  outline-style:none;
+}
+#u12 {
+  border-width:0px;
+  position:absolute;
+  left:643px;
+  top:248px;
+  width:340px;
+  height:67px;
+}
+#u12_input {
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:340px;
+  height:67px;
+  background-color:transparent;
+  font-family:'李旭科漫画体v1.0';
+  font-weight:400;
+  font-style:normal;
+  font-size:36px;
+  text-decoration:underline;
+  color:#000000;
+  text-align:center;
+  border-color:transparent;
+  outline-style:none;
+}
+#u13 {
+  border-width:0px;
+  position:absolute;
+  left:643px;
+  top:473px;
+  width:340px;
+  height:68px;
+}
+#u13_input {
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:340px;
+  height:68px;
+  background-color:transparent;
+  font-family:'李旭科漫画体v1.0';
+  font-weight:400;
+  font-style:normal;
+  font-size:36px;
+  text-decoration:underline;
+  color:#000000;
+  text-align:center;
+  border-color:transparent;
+  outline-style:none;
+}
+#u14 {
+  border-width:0px;
+  position:absolute;
+  left:643px;
+  top:403px;
+  width:340px;
+  height:77px;
+}
+#u14_input {
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:340px;
+  height:77px;
+  background-color:transparent;
+  font-family:'李旭科漫画体v1.0';
+  font-weight:400;
+  font-style:normal;
+  font-size:36px;
+  text-decoration:underline;
+  color:#000000;
+  text-align:center;
+  border-color:transparent;
+  outline-style:none;
+}
+#u15_img {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:32px;
+  height:36px;
+}
+#u15 {
+  border-width:0px;
+  position:absolute;
+  left:687px;
+  top:270px;
+  width:32px;
+  height:36px;
+}
+#u15_text {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:0px;
+  visibility:hidden;
+  word-wrap:break-word;
+}
+#u16_img {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:32px;
+  height:33px;
+}
+#u16 {
+  border-width:0px;
+  position:absolute;
+  left:687px;
+  top:351px;
+  width:32px;
+  height:33px;
+}
+#u16_text {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:0px;
+  visibility:hidden;
+  word-wrap:break-word;
+}
+#u17_img {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:32px;
+  height:33px;
+}
+#u17 {
+  border-width:0px;
+  position:absolute;
+  left:687px;
+  top:421px;
+  width:32px;
+  height:33px;
+}
+#u17_text {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:0px;
+  visibility:hidden;
+  word-wrap:break-word;
+}
+#u18_img {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:32px;
+  height:29px;
+}
+#u18 {
+  border-width:0px;
+  position:absolute;
+  left:687px;
+  top:493px;
+  width:32px;
+  height:29px;
+}
+#u18_text {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:0px;
+  visibility:hidden;
+  word-wrap:break-word;
+}
