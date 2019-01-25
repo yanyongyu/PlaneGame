@@ -1,4 +1,4 @@
-*.exe
+﻿*.exe
 *.spec
 *.db
 /__pycache__
