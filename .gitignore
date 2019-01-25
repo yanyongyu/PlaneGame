@@ -1,1 +1,11 @@
-release
+*.exe
+*.spec
+*.db
+/__pycache__
+/release
+/boss/*.png
+/images/feidan.png
+/images/life1.png
+/官网
+/build
+/dist

@@ -16,839 +16,767 @@ import pygame.locals as gloc
 
 import enemy
 import bullet
-import supply
 import sql
 import variables as var
 
-#初始化
-pygame.init()
-pygame.mixer.init()
-pygame.mixer.set_num_channels(16)
-bg_size = width, height = 480, 700
-screen = pygame.display.set_mode(bg_size)
-pygame.display.set_caption('飞机大战')
-icon = pygame.image.load('images/icon.gif').convert()
-pygame.display.set_icon(icon)
-background = pygame.image.load('images/background.png').convert()
-BLACK = (0,0,0)
-GREEN = (0,255,0)
-RED = (255,0,0)
-WHITE = (255,255,255)
+class Game():
+    def __init__(self):
+        #初始化
+        pygame.init()
+        pygame.mixer.init()
+        pygame.mixer.set_num_channels(16)
+        self.bg_size = width, height = 480, 700
+        self.screen = pygame.display.set_mode(self.bg_size)
+        pygame.display.set_caption('飞机大战')
+        icon = pygame.image.load('images/icon.gif').convert()
+        pygame.display.set_icon(icon)
+        self.background = pygame.image.load('images/background.png').convert()
+        self.BLACK = (0,0,0)
+        self.GREEN = (0,255,0)
+        self.RED = (255,0,0)
+        self.WHITE = (255,255,255)
 
-#载入音乐，音效
-pygame.mixer.music.load('sound/game_music.ogg')
-pygame.mixer.music.set_volume(0.2)
+        #载入音乐，音效
+        pygame.mixer.music.set_volume(0.2)
 
-bullet_sound = pygame.mixer.Sound('sound/bullet.wav')
-bullet_sound.set_volume(0.2)
-
-bomb_sound = pygame.mixer.Sound('sound/use_bomb.wav')
-bomb_sound.set_volume(0.2)
-
-supply_sound = pygame.mixer.Sound('sound/supply.wav')
-supply_sound.set_volume(0.2)
-
-get_bomb_sound = pygame.mixer.Sound('sound/get_bomb.wav')
-get_bomb_sound.set_volume(0.2)
-get_bullet_sound = pygame.mixer.Sound('sound/get_bullet.wav')
-get_bullet_sound.set_volume(0.2)
-
-upgrade_sound = pygame.mixer.Sound('sound/upgrade.wav')
-upgrade_sound.set_volume(0.2)
-
-enemy3_fly_sound = pygame.mixer.Sound('sound/enemy3_flying.wav')
-enemy3_fly_sound.set_volume(0.2)
-
-enemy1_down_sound = pygame.mixer.Sound('sound/enemy1_down.wav')
-enemy1_down_sound.set_volume(0.1)
-enemy2_down_sound = pygame.mixer.Sound('sound/enemy2_down.wav')
-enemy2_down_sound.set_volume(0.2)
-enemy3_down_sound = pygame.mixer.Sound('sound/enemy3_down.wav')
-enemy3_down_sound.set_volume(0.5)
-me_down_sound = pygame.mixer.Sound('sound/me_down.wav')
-me_down_sound.set_volume(0.2)
-
-#提升速度
-def inc_speed(target: pygame.sprite.Group, inc: int) -> None:
-    for each in target:
-        each.speed += inc
+        self.bullet_sound = pygame.mixer.Sound('sound/bullet.wav')
+        self.bullet_sound.set_volume(0.2)
         
-#消灭屏幕中敌方飞机
-def kill_enemies(group: pygame.sprite.Group) -> None:
-    for each in group:
-        if each.rect.bottom > 0:
-            each.active = False
+        self.bomb_sound = pygame.mixer.Sound('sound/use_bomb.wav')
+        self.bomb_sound.set_volume(0.2)
+        
+        self.supply_sound = pygame.mixer.Sound('sound/supply.wav')
+        self.supply_sound.set_volume(0.2)
+        
+        self.get_bomb_sound = pygame.mixer.Sound('sound/get_bomb.wav')
+        self.get_bomb_sound.set_volume(0.2)
+        self.get_bullet_sound = pygame.mixer.Sound('sound/get_bullet.wav')
+        self.get_bullet_sound.set_volume(0.2)
+        
+        self.upgrade_sound = pygame.mixer.Sound('sound/upgrade.wav')
+        self.upgrade_sound.set_volume(0.2)
+        
+        self.enemy3_fly_sound = pygame.mixer.Sound('sound/enemy3_flying.wav')
+        self.enemy3_fly_sound.set_volume(0.2)
+        
+        self.enemy1_down_sound = pygame.mixer.Sound('sound/enemy1_down.wav')
+        self.enemy1_down_sound.set_volume(0.1)
+        self.enemy2_down_sound = pygame.mixer.Sound('sound/enemy2_down.wav')
+        self.enemy2_down_sound.set_volume(0.2)
+        self.enemy3_down_sound = pygame.mixer.Sound('sound/enemy3_down.wav')
+        self.enemy3_down_sound.set_volume(0.5)
+        self.me_down_sound = pygame.mixer.Sound('sound/me_down.wav')
+        self.me_down_sound.set_volume(0.2)
 
-#主程序
-def main():
-    init_thread = var.Initializer()
-    init_thread.daemon = True
-    init_thread.start()
-    clock = pygame.time.Clock()
-    running = True
-    var.init()
-
-    #发放补给包
-    bullet_supply = supply.Bullet_Supply(bg_size)
-    bomb_supply = supply.Bomb_Supply(bg_size)
-    bullet_update = supply.Bullet_Update(bg_size)
-    medical_supply = supply.Medical_supply(bg_size)
-    SUPPLY_TIME = gloc.USEREVENT
-
-    #超级子弹定时器
-    DOUBLE_BULLET_TIME = gloc.USEREVENT + 1
-
-    #统计得分
-    score_font = pygame.font.Font('font/font.ttf',36)
-
-    #暂停选项
-    pause_nor_image = pygame.image.load('images/pause_nor.png').convert_alpha()
-    pause_pressed_image = pygame.image.load('images/pause_pressed.png').convert_alpha()
-    resume_nor_image = pygame.image.load('images/resume_nor.png').convert_alpha()
-    resume_pressed_image = pygame.image.load('images/resume_pressed.png').convert_alpha()
-    paused_rect = pause_nor_image.get_rect()
-    paused_rect.left, paused_rect.top = width - paused_rect.width - 10, 10
-    paused_image = pause_nor_image
-    pause_restart = pygame.image.load('images/restart.png').convert_alpha()
-    pause_restart_rect = pause_restart.get_rect()
-    pause_restart_rect.left, pause_restart_rect.top = 130, 300
-    pause_quit = pygame.image.load('images/quit.png').convert_alpha()
-    pause_quit_rect = pause_quit.get_rect()
-    pause_quit_rect.left, pause_quit_rect.top = 310, 300
-
-    #无敌计时器
-    INVINCIBLE_TIME = gloc.USEREVENT + 2
-
-    #游戏开始画面
-    author_font = pygame.font.Font('font/msyh.ttf',20)
-    start_image = pygame.image.load('images/start/start.png').convert_alpha()
-    start_rect = start_image.get_rect()
-    help_image = pygame.image.load('images/start/help.png').convert_alpha()
-    help_rect = help_image.get_rect()
-    exit_image = pygame.image.load('images/start/exit.png').convert_alpha()
-    exit_rect = exit_image.get_rect()
-
-    #游戏结束画面
-    gameover_font = pygame.font.Font('font/font.ttf',48)
-    again_image = pygame.image.load('images/start/again.png').convert_alpha()
-    again_rect = again_image.get_rect()
-    gameover_image = pygame.image.load('images/start/gameover.png').convert_alpha()
-    gameover_rect = gameover_image.get_rect()
-
-    while running:
-        for event in pygame.event.get():
-            if event.type == gloc.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            #发放补给包
-            elif event.type == SUPPLY_TIME:
-                supply_sound.play()
-                pygame.time.set_timer(SUPPLY_TIME, 30000)
-                var.supply_time = time.time()
-                if var.score > 750000:
-                    if random.choice([True,False]):
+        #主程序
+        init_thread = var.Initializer(self)
+        init_thread.daemon = True
+        init_thread.start()
+        clock = pygame.time.Clock()
+        running = True
+        var.init(self)
+    
+        while running:
+            for event in pygame.event.get():
+                if event.type == gloc.QUIT:
+                    pygame.quit()
+                    sys.exit()
+    
+                #发放补给包
+                elif event.type == self.SUPPLY_TIME:
+                    self.supply_sound.play()
+                    pygame.time.set_timer(self.SUPPLY_TIME, 30000)
+                    self.supply_time = time.time()
+                    if self.score > 750000:
                         if random.choice([True,False]):
-                            bomb_supply.reset()
+                            if random.choice([True,False]):
+                                self.bomb_supply.reset()
+                            else:
+                                self.bullet_supply.reset()
                         else:
-                            bullet_supply.reset()
+                            if random.choice([True,False]):
+                                self.medical_supply.reset()
+                            else:
+                                self.bullet_update.reset()
+                    elif random.choice([True,False]):
+                        self.bomb_supply.reset()
                     else:
-                        if random.choice([True,False]):
-                            medical_supply.reset()
+                        self.bullet_supply.reset()
+    
+                #超级子弹计时器
+                elif event.type == self.DOUBLE_BULLET_TIME:
+                    self.is_double = False
+                    self.bullet2 = var.init_bullet(
+                        bullet.Bullet2,
+                        self.BULLET2_NUM,
+                        (self.me.rect.centerx-33, self.me.rect.centery),
+                        (self.me.rect.centerx+30, self.me.rect.centery))
+                    self.bullet4 = var.init_bullet(
+                        bullet.Bullet4,
+                        self.BULLET4_NUM,
+                        (self.me.rect.centerx-33, self.me.rect.centery),
+                        (self.me.rect.centerx+30, self.me.rect.centery))
+                    pygame.time.set_timer(self.DOUBLE_BULLET_TIME, 0)
+    
+                #检测用户按键
+                elif event.type == gloc.KEYDOWN:
+                    #检测用户使用全屏炸弹
+                    if event.key == gloc.K_SPACE:
+                        if self.me.bomb_num and (not self.paused):
+                            self.me.bomb_num -= 1
+                            self.me.bomb_action = True
+                            self.bomb_sound.play()
+                            if self.boss_appear:
+                                self.boss_now.energy -= 30
+                                for each in self.boss_bullet:
+                                    each.active = False
+                            else:
+                                var.kill_enemies(self.enemies)
+                                        
+                    #检测用户p键暂停
+                    elif event.key == gloc.K_p or event.key == gloc.K_ESCAPE:
+                        self.paused = not self.paused
+                        if self.paused:
+                            self.paused_image = self.resume_pressed_image
+                            self.paused_time = time.time()
+                            pygame.time.set_timer(self.SUPPLY_TIME, 0)
+                            pygame.mixer.music.pause()
+                            pygame.mixer.pause()
                         else:
-                            bullet_update.reset()
-                elif random.choice([True,False]):
-                    bomb_supply.reset()
-                else:
-                    bullet_supply.reset()
-
-            #超级子弹计时器
-            elif event.type == DOUBLE_BULLET_TIME:
-                var.is_double = False
-                var.bullet2 = var.init_bullet(
-                    bullet.Bullet2,
-                    var.BULLET2_NUM,
-                    (var.me.rect.centerx-33, var.me.rect.centery),
-                    (var.me.rect.centerx+30, var.me.rect.centery))
-                var.bullet4 = var.init_bullet(
-                    bullet.Bullet4,
-                    var.BULLET4_NUM,
-                    (var.me.rect.centerx-33, var.me.rect.centery),
-                    (var.me.rect.centerx+30, var.me.rect.centery))
-                pygame.time.set_timer(DOUBLE_BULLET_TIME, 0)
-
-            #检测用户按键
-            elif event.type == gloc.KEYDOWN:
-                #检测用户使用全屏炸弹
-                if event.key == gloc.K_SPACE:
-                    if var.me.bomb_num and (not var.paused):
-                        var.me.bomb_num -= 1
-                        var.me.bomb_action = True
-                        bomb_sound.play()
-                        if var.boss_appear:
-                            var.boss_now.energy -= 30
-                            for each in var.boss_bullet:
-                                each.active = False
+                            self.paused_image = self.pause_pressed_image
+                            if not self.start and not self._help:
+                                pygame.time.set_timer(self.SUPPLY_TIME, 30000-round((self.paused_time-self.supply_time)*1000))
+                            pygame.mixer.music.unpause()
+                            pygame.mixer.unpause()
+    
+                #己方飞机无敌计时
+                elif event.type == self.INVINCIBLE_TIME:
+                    self.me.invincible = False
+                    pygame.time.set_timer(self.INVINCIBLE_TIME, 0)
+    
+                #检测鼠标暂停操作
+                elif event.type == gloc.MOUSEBUTTONDOWN:
+                    if event.button == 1 and self.paused_rect.collidepoint(event.pos):
+                        self.paused = not self.paused
+                        if self.paused:
+                            self.paused_image = self.resume_pressed_image
+                            self.paused_time = time.time()
+                            pygame.time.set_timer(self.SUPPLY_TIME, 0)
+                            pygame.mixer.music.pause()
+                            pygame.mixer.pause()
                         else:
-                            kill_enemies(var.enemies)
-                                    
-                #检测用户p键暂停
-                elif event.key == gloc.K_p or event.key == gloc.K_ESCAPE:
-                    var.paused = not var.paused
-                    if var.paused:
-                        paused_image = resume_pressed_image
-                        paused_time = time.time()
-                        pygame.time.set_timer(SUPPLY_TIME, 0)
-                        pygame.mixer.music.pause()
-                        pygame.mixer.pause()
+                            self.paused_image = self.pause_pressed_image
+                            if not self.start and not self._help:
+                                pygame.time.set_timer(self.SUPPLY_TIME, 30000-round((self.paused_time-self.supply_time)*1000))
+                            pygame.mixer.music.unpause()
+                            pygame.mixer.unpause()
+                elif event.type == gloc.MOUSEMOTION:
+                    if self.paused_rect.collidepoint(event.pos):
+                        if self.paused:
+                            self.paused_image = self.resume_pressed_image
+                        else:
+                            self.paused_image = self.pause_pressed_image
                     else:
-                        paused_image = pause_pressed_image
-                        if not var.start and not var._help:
-                            pygame.time.set_timer(SUPPLY_TIME, 30000-round((paused_time-var.supply_time)*1000))
-                        pygame.mixer.music.unpause()
-                        pygame.mixer.unpause()
-
-            #己方飞机无敌计时
-            elif event.type == INVINCIBLE_TIME:
-                var.me.invincible = False
-                pygame.time.set_timer(INVINCIBLE_TIME, 0)
-
-            #检测鼠标暂停操作
-            elif event.type == gloc.MOUSEBUTTONDOWN:
-                if event.button == 1 and paused_rect.collidepoint(event.pos):
-                    var.paused = not var.paused
-                    if var.paused:
-                        paused_image = resume_pressed_image
-                        paused_time = time.time()
-                        pygame.time.set_timer(SUPPLY_TIME, 0)
-                        pygame.mixer.music.pause()
-                        pygame.mixer.pause()
-                    else:
-                        paused_image = pause_pressed_image
-                        if not var.start and not var._help:
-                            pygame.time.set_timer(SUPPLY_TIME, 30000-round((paused_time-var.supply_time)*1000))
-                        pygame.mixer.music.unpause()
-                        pygame.mixer.unpause()
-            elif event.type == gloc.MOUSEMOTION:
-                if paused_rect.collidepoint(event.pos):
-                    if var.paused:
-                        paused_image = resume_pressed_image
-                    else:
-                        paused_image = pause_pressed_image
-                else:
-                    if var.paused:
-                        paused_image = resume_nor_image
-                    else:
-                        paused_image = pause_nor_image
-
-        #根据用户得分增加难度
-        if var.level == 1 and var.score > 50000:
-            var.level = 2
-            upgrade_sound.play()
-            #增加3架小型飞机，2架中型飞机，1架大型飞机
-            var.add_enemies(enemy.SmallEnemy, 3, var.small_enemies, var.enemies)
-            var.add_enemies(enemy.MidEnemy, 2, var.mid_enemies, var.enemies)
-            var.add_enemies(enemy.BigEnemy, 1, var.big_enemies, var.enemies)
-            #提升速度
-            inc_speed(var.small_enemies, 1)
-
-        elif var.level == 2 and var.score > 300000:
-            var.level = 3
-            upgrade_sound.play()
-            #增加5架小型飞机，3架中型飞机，2架大型飞机
-            var.add_enemies(enemy.SmallEnemy, 5, var.small_enemies, var.enemies)
-            var.add_enemies(enemy.MidEnemy, 3, var.mid_enemies, var.enemies)
-            var.add_enemies(enemy.BigEnemy, 2, var.big_enemies, var.enemies)
-            #提升速度
-            inc_speed(var.small_enemies, 1)
-            inc_speed(var.mid_enemies, 1)
-
-        elif var.level == 3 and var.score > 600000:
-            var.level = 4
-            upgrade_sound.play()
-            #增加5架小型飞机，3架中型飞机，2架大型飞机
-            var.add_enemies(enemy.SmallEnemy, 5, var.small_enemies, var.enemies)
-            var.add_enemies(enemy.MidEnemy, 3, var.mid_enemies, var.enemies)
-            var.add_enemies(enemy.BigEnemy, 2, var.big_enemies, var.enemies)
-            #提升速度
-            inc_speed(var.small_enemies, 1)
-            inc_speed(var.mid_enemies, 1)
-
-        elif var.level == 4 and var.score > 1000000:
-            var.level = 5
-            upgrade_sound.play()
-            #增加5架小型飞机，3架中型飞机，2架大型飞机
-            var.add_enemies(enemy.SmallEnemy, 5, var.small_enemies, var.enemies)
-            var.add_enemies(enemy.MidEnemy, 3, var.mid_enemies, var.enemies)
-            var.add_enemies(enemy.BigEnemy, 2, var.big_enemies, var.enemies)
-            #提升速度
-            inc_speed(var.small_enemies, 1)
-            inc_speed(var.mid_enemies, 1)
+                        if self.paused:
+                            self.paused_image = self.resume_nor_image
+                        else:
+                            self.paused_image = self.pause_nor_image
+    
+            #根据用户得分增加难度
+            if self.level == 1 and self.score > 50000:
+                self.level = 2
+                self.upgrade_sound.play()
+                #增加3架小型飞机，2架中型飞机，1架大型飞机
+                var.add_enemies(enemy.SmallEnemy, 3, self.small_enemies, self.enemies)
+                var.add_enemies(enemy.MidEnemy, 2, self.mid_enemies, self.enemies)
+                var.add_enemies(enemy.BigEnemy, 1, self.big_enemies, self.enemies)
+                #提升速度
+                var.inc_speed(self.small_enemies, 1)
+    
+            elif self.level == 2 and self.score > 300000:
+                self.level = 3
+                self.upgrade_sound.play()
+                #增加5架小型飞机，3架中型飞机，2架大型飞机
+                var.add_enemies(enemy.SmallEnemy, 5, self.small_enemies, self.enemies)
+                var.add_enemies(enemy.MidEnemy, 3, self.mid_enemies, self.enemies)
+                var.add_enemies(enemy.BigEnemy, 2, self.big_enemies, self.enemies)
+                #提升速度
+                var.inc_speed(self.small_enemies, 1)
+                var.inc_speed(self.mid_enemies, 1)
+    
+            elif self.level == 3 and self.score > 600000:
+                self.level = 4
+                self.upgrade_sound.play()
+                #增加5架小型飞机，3架中型飞机，2架大型飞机
+                var.add_enemies(enemy.SmallEnemy, 5, self.small_enemies, self.enemies)
+                var.add_enemies(enemy.MidEnemy, 3, self.mid_enemies, self.enemies)
+                var.add_enemies(enemy.BigEnemy, 2, self.big_enemies, self.enemies)
+                #提升速度
+                var.inc_speed(self.small_enemies, 1)
+                var.inc_speed(self.mid_enemies, 1)
+    
+            elif self.level == 4 and self.score > 1000000:
+                self.level = 5
+                self.upgrade_sound.play()
+                #增加5架小型飞机，3架中型飞机，2架大型飞机
+                var.add_enemies(enemy.SmallEnemy, 5, self.small_enemies, self.enemies)
+                var.add_enemies(enemy.MidEnemy, 3, self.mid_enemies, self.enemies)
+                var.add_enemies(enemy.BigEnemy, 2, self.big_enemies, self.enemies)
+                #提升速度
+                var.inc_speed(self.small_enemies, 1)
+                var.inc_speed(self.mid_enemies, 1)
+                
+            #根据用户得分出现boss
+            if self.boss_lv == 0 and self.score > 100000:
+                self.boss_lv = 1
+                self.boss_now = self.boss_lv1
+                self.boss_bullet = self.boss_bullet_1
+                self.boss_appear = True
+                self.transition = True
+                self.me.bomb_action = False
+                var.kill_enemies(self.enemies)
+                var.change_music(True)
+            elif self.boss_lv == 1 and self.score > 350000:
+                self.boss_lv = 2
+                self.boss_now = self.boss_lv2
+                self.boss_bullet = self.boss_bullet_2
+                self.boss_appear = True
+                self.transition = True
+                self.me.bomb_action = False
+                var.kill_enemies(self.enemies)
+                var.change_music(True)
+            elif self.boss_lv == 2 and self.score > 750000:
+                self.boss_lv = 3
+                self.boss_now = self.boss_lv3
+                self.boss_bullet = self.boss_bullet_3
+                self.boss_appear = True
+                self.transition = True
+                self.me.bomb_action = False
+                var.kill_enemies(self.enemies)
+                var.change_music(True)
+    
+            self.screen.blit(self.background,(0,0))
             
-        #根据用户得分出现boss
-        if var.boss_lv == 0 and var.score > 100000:
-            var.boss_lv = 1
-            var.boss_now = var.boss_lv1
-            var.boss_bullet = var.boss_bullet_1
-            var.boss_appear = True
-            var.transition = True
-            var.me.bomb_action = False
-            kill_enemies(var.enemies)
-            var.change_music(True)
-        elif var.boss_lv == 1 and var.score > 350000:
-            var.boss_lv = 2
-            var.boss_now = var.boss_lv2
-            var.boss_bullet = var.boss_bullet_2
-            var.boss_appear = True
-            var.transition = True
-            var.me.bomb_action = False
-            kill_enemies(var.enemies)
-            var.change_music(True)
-        elif var.boss_lv == 2 and var.score > 750000:
-            var.boss_lv = 3
-            var.boss_now = var.boss_lv3
-            var.boss_bullet = var.boss_bullet_3
-            var.boss_appear = True
-            var.transition = True
-            var.me.bomb_action = False
-            kill_enemies(var.enemies)
-            var.change_music(True)
-
-        screen.blit(background,(0,0))
-        
 ## --------------------------------游戏开始画面---------------------------------
-        if var.start and not var._help:
-            title_image = pygame.image.load('images/start/title.png').convert_alpha()
-            title_image_rect = title_image.get_rect()
-            title_image_rect.left, title_image_rect.top = (width - title_image_rect.width) // 2, (height // 3) - 40
-            screen.blit(title_image, title_image_rect)
-            
-            start_rect.left, start_rect.top = (width - start_rect.width) // 2, 413
-            screen.blit(start_image, start_rect)
-            
-            help_rect.left, help_rect.top = (width - help_rect.width) // 2, 463
-            screen.blit(help_image, help_rect)
-            
-            exit_rect.left, exit_rect.top = (width - exit_rect.width) // 2, 513
-            screen.blit(exit_image, exit_rect)
-            
-            author_text = author_font.render('directed by : ShowTime--Joker',True,WHITE)
-            author_text_rect = author_text.get_rect()
-            author_text_rect.left = width - author_text_rect.width - 10
-            author_text_rect.top = height - author_text_rect.height - 10
-            screen.blit(author_text, author_text_rect)
-            
-            record_score_text = score_font.render('Best : %d' % var.record_score, True, WHITE)
-            screen.blit(record_score_text, (50,50))
-            if pygame.mouse.get_pressed()[0]:
-                pos = pygame.mouse.get_pos()
-                if start_rect.collidepoint(pos):
-                    var.start = False
-                    if var.paused:
-                        var.paused = False
-                        paused_image = pause_pressed_image
-                        pygame.mixer.music.unpause()
-                        pygame.mixer.unpause()
-                    var.supply_time = time.time()
-                    pygame.time.set_timer(SUPPLY_TIME, 30000)
-                elif help_rect.collidepoint(pos):
-                    var._help = True
-                elif exit_rect.collidepoint(pos):
-                    pygame.quit()
-                    sys.exit()
-                    
-## --------------------------------帮助画面------------------------------------
-        elif var._help:
-            help_image1 = pygame.image.load('images/help/help1.png').convert_alpha()
-            help_image2 = pygame.image.load('images/help/help2.png').convert_alpha()
-            back_image1 = pygame.image.load('images/help/back1.png').convert_alpha()
-            back_image2 = pygame.image.load('images/help/back2.png').convert_alpha()
-            if var.switch_image:
-                screen.blit(help_image1, (10,0))
-                screen.blit(back_image1, (0,0))
-            else:
-                screen.blit(help_image2, (10,0))
-                screen.blit(back_image2, (0,0))
+            if self.start and not self._help:
+                self.screen.blit(self.title_image, self.title_image_rect)
+                self.screen.blit(self.start_image, self.start_rect)
+                self.screen.blit(self.help_image, self.help_rect)
+                self.screen.blit(self.exit_image, self.exit_rect)
+                self.screen.blit(self.author_text, self.author_text_rect)
                 
-            #切换图片
-            if not (var.delay % 5):
-                var.switch_image = not var.switch_image
-            var.delay -= 1
-            if not var.delay:
-                var.delay = 100
-                
-            if pygame.mouse.get_pressed()[0]:
-                pos = pygame.mouse.get_pos()
-                if back_image1.get_rect().collidepoint(pos):
-                    var._help = False
-        
-## --------------------------------背景过渡------------------------------------
-        elif var.transition:
-            #毁灭画面中敌方飞机
-            enemy3_fly_sound.stop()
-            if var.trans_delay:
-                var.trans_delay -= 1
-                for each in var.enemies:
-                    if each.rect.bottom > 0 and (not each.active):
-                        screen.blit(each.destroy_images[each.destroy_index],each.rect)
-                        if not(var.trans_delay % 3):
-                            each.destroy_index = (each.destroy_index + 1) % 4
-                            if each.destroy_index == 0:
-                                each.reset()
-                #绘制我方飞机
-                if var.me.active:
-                    if var.switch_image:
-                        screen.blit(var.me.image1, var.me.rect)
-                    else:
-                        screen.blit(var.me.image2, var.me.rect)
-                
-                #切换图片
-                if not (var.trans_delay % 5):
-                    var.switch_image = not var.switch_image
-            #背景过渡
-            else:
-                if var.boss_appear:
-                    var.trans_num += 1
-                    screen.blit(var.boss_now.transitional_image[var.boss_now.transitional_index],(0,0))
-                    if not (var.trans_num % 4):
-                        var.boss_now.transitional_index = (var.boss_now.transitional_index + 1) % len(var.boss_now.transitional_image)
-                        if not var.boss_now.transitional_index:
-                            var.me.init_image()
-                            var.trans_num = 0
-                            var.transition = False
-                else:
-                    var.trans_num += 1
-                    screen.blit(var.boss_now.background, (0,0))
-                    screen.blit(var.boss_now.destroy_image[var.boss_now.destroy_index],(0,0))
-                    if not (var.trans_num % 6):
-                        var.boss_now.destroy_index = (var.boss_now.destroy_index + 1) % len(var.boss_now.destroy_image)
-                        if not var.boss_now.destroy_index:
-                            var.me.init_image(True)
-                            var.me.bomb_action = False
-                            var.trans_num = 0
-                            var.trans_delay = 12
-                            var.change_music()
-                            var.transition = False
-        
-## ------------------------------游戏结束画面-----------------------------------
-        elif var.life_num == 0:
-            pygame.mixer.music.stop()
-            pygame.mixer.stop()
-            pygame.time.set_timer(SUPPLY_TIME, 0)
-            if not var.recorded:
-                var.recorded = True
-                if var.score > var.record_score:
-                    sql.Sql.set_score(var.score)
-                        
-            record_score_text = score_font.render('Best : %d' % var.record_score, True, WHITE)
-            screen.blit(record_score_text, (50,50))
-            
-            gameover_text1 = gameover_font.render('Your Score', True, WHITE)
-            gameover_text1_rect = gameover_text1.get_rect()
-            gameover_text1_rect.left, gameover_text1_rect.top = (width - gameover_text1_rect.width) // 2, height // 3
-            screen.blit(gameover_text1, gameover_text1_rect)
-            
-            gameover_text2 = gameover_font.render(str(var.score), True, WHITE)
-            gameover_text2_rect = gameover_text2.get_rect()
-            gameover_text2_rect.left, gameover_text2_rect.top = (width - gameover_text2_rect.width) // 2, gameover_text1_rect.bottom + 10
-            screen.blit(gameover_text2, gameover_text2_rect)
-            
-            again_rect.left, again_rect.top = (width - again_rect.width) // 2, gameover_text2_rect.bottom + 50
-            screen.blit(again_image, again_rect)
-            
-            gameover_rect.left, gameover_rect.top = (width - gameover_rect.width) // 2, again_rect.bottom + 10
-            screen.blit(gameover_image, gameover_rect)
-            if pygame.mouse.get_pressed()[0]:
-                pos = pygame.mouse.get_pos()
-                if again_rect.collidepoint(pos):
-                    init_thread = var.Initializer()
-                    init_thread.daemon = True
-                    init_thread.start()
-                    var.init()
-                elif gameover_rect.collidepoint(pos):
-                    pygame.quit()
-                    sys.exit()
-## ----------------------------------------------------------------------------
-        else:
-            #boss背景
-            if var.boss_appear:
-                screen.blit(var.boss_now.background,(0,0))
-                
-            #暂停界面
-            if var.paused:
-                screen.blit(pause_restart, pause_restart_rect)
-                screen.blit(pause_quit, pause_quit_rect)
+                record_score_text = self.score_font.render('Best : %d' % self.record_score, True, self.WHITE)
+                self.screen.blit(record_score_text, (50,50))
                 if pygame.mouse.get_pressed()[0]:
                     pos = pygame.mouse.get_pos()
-                    if pause_restart_rect.collidepoint(pos):
-                        init_thread = var.Initializer()
+                    if self.start_rect.collidepoint(pos):
+                        self.start = False
+                        if self.paused:
+                            self.paused = False
+                            self.paused_image = self.pause_pressed_image
+                            pygame.mixer.music.unpause()
+                            pygame.mixer.unpause()
+                        self.supply_time = time.time()
+                        pygame.time.set_timer(self.SUPPLY_TIME, 30000)
+                    elif self.help_rect.collidepoint(pos):
+                        self._help = True
+                    elif self.exit_rect.collidepoint(pos):
+                        pygame.quit()
+                        sys.exit()
+                        
+## --------------------------------帮助画面------------------------------------
+            elif self._help:
+                help_image1 = pygame.image.load('images/help/help1.png').convert_alpha()
+                help_image2 = pygame.image.load('images/help/help2.png').convert_alpha()
+                back_image1 = pygame.image.load('images/help/back1.png').convert_alpha()
+                back_image2 = pygame.image.load('images/help/back2.png').convert_alpha()
+                if self.switch_image:
+                    self.screen.blit(help_image1, (10,0))
+                    self.screen.blit(back_image1, (0,0))
+                else:
+                    self.screen.blit(help_image2, (10,0))
+                    self.screen.blit(back_image2, (0,0))
+                    
+                #切换图片
+                if not (self.delay % 5):
+                    self.switch_image = not self.switch_image
+                self.delay -= 1
+                if not self.delay:
+                    self.delay = 100
+                    
+                if pygame.mouse.get_pressed()[0]:
+                    pos = pygame.mouse.get_pos()
+                    if back_image1.get_rect().collidepoint(pos):
+                        self._help = False
+            
+## --------------------------------背景过渡------------------------------------
+            elif self.transition:
+                #毁灭画面中敌方飞机
+                self.enemy3_fly_sound.stop()
+                if self.trans_delay:
+                    self.trans_delay -= 1
+                    for each in self.enemies:
+                        if each.rect.bottom > 0 and (not each.active):
+                            self.screen.blit(each.destroy_images[each.destroy_index], each.rect)
+                            if not(self.trans_delay % 3):
+                                each.destroy_index = (each.destroy_index + 1) % 4
+                                if each.destroy_index == 0:
+                                    each.reset()
+                    #绘制我方飞机
+                    if self.me.active:
+                        if self.switch_image:
+                            self.screen.blit(self.me.image1, self.me.rect)
+                        else:
+                            self.screen.blit(self.me.image2, self.me.rect)
+                    
+                    #切换图片
+                    if not (self.trans_delay % 5):
+                        self.switch_image = not self.switch_image
+                #背景过渡
+                else:
+                    if self.boss_appear:
+                        self.trans_num += 1
+                        self.screen.blit(self.boss_now.transitional_image[self.boss_now.transitional_index],(0,0))
+                        if not (self.trans_num % 4):
+                            self.boss_now.transitional_index = (self.boss_now.transitional_index + 1) % len(self.boss_now.transitional_image)
+                            if not self.boss_now.transitional_index:
+                                self.me.init_image()
+                                self.trans_num = 0
+                                self.transition = False
+                    else:
+                        self.trans_num += 1
+                        self.screen.blit(self.boss_now.background, (0,0))
+                        self.screen.blit(self.boss_now.destroy_image[self.boss_now.destroy_index],(0,0))
+                        if not (self.trans_num % 6):
+                            self.boss_now.destroy_index = (self.boss_now.destroy_index + 1) % len(self.boss_now.destroy_image)
+                            if not self.boss_now.destroy_index:
+                                self.me.init_image(True)
+                                self.me.bomb_action = False
+                                self.trans_num = 0
+                                self.trans_delay = 12
+                                var.change_music()
+                                self.transition = False
+            
+## ------------------------------游戏结束画面-----------------------------------
+            elif self.life_num == 0:
+                pygame.mixer.music.stop()
+                pygame.mixer.stop()
+                pygame.time.set_timer(self.SUPPLY_TIME, 0)
+                if not self.recorded:
+                    self.recorded = True
+                    if self.score > self.record_score:
+                        sql.Sql.set_score(self.score)
+                            
+                record_score_text = self.score_font.render('Best : %d' % self.record_score, True, self.WHITE)
+                self.screen.blit(record_score_text, (50,50))
+                
+                gameover_text1 = self.gameover_font.render('Your Score', True, self.WHITE)
+                gameover_text1_rect = gameover_text1.get_rect()
+                gameover_text1_rect.left, gameover_text1_rect.top = (width - gameover_text1_rect.width) // 2, height // 3
+                self.screen.blit(gameover_text1, gameover_text1_rect)
+                
+                gameover_text2 = self.gameover_font.render(str(self.score), True, self.WHITE)
+                gameover_text2_rect = gameover_text2.get_rect()
+                gameover_text2_rect.left, gameover_text2_rect.top = (width - gameover_text2_rect.width) // 2, gameover_text1_rect.bottom + 10
+                self.screen.blit(gameover_text2, gameover_text2_rect)
+                
+                self.again_rect.left, self.again_rect.top = (width - self.again_rect.width) // 2, gameover_text2_rect.bottom + 50
+                self.screen.blit(self.again_image, self.again_rect)
+                
+                self.gameover_rect.left = (width - self.gameover_rect.width) // 2
+                self.gameover_rect.top = self.again_rect.bottom + 10
+                self.screen.blit(self.gameover_image, self.gameover_rect)
+                if pygame.mouse.get_pressed()[0]:
+                    pos = pygame.mouse.get_pos()
+                    if self.again_rect.collidepoint(pos):
+                        init_thread = var.Initializer(self)
                         init_thread.daemon = True
                         init_thread.start()
-                        var.init()
-                    elif pause_quit_rect.collidepoint(pos):
-                        var.life_num = 0
-                
-            if not var.paused:
-                #检测键盘按键操作
-                key_pressed = pygame.key.get_pressed()
-                if key_pressed[gloc.K_w] or key_pressed[gloc.K_UP]:
-                    var.me.moveUp()
-                if key_pressed[gloc.K_s] or key_pressed[gloc.K_DOWN]:
-                    var.me.moveDown()
-                if key_pressed[gloc.K_a] or key_pressed[gloc.K_LEFT]:
-                    var.me.moveLeft()
-                if key_pressed[gloc.K_d] or key_pressed[gloc.K_RIGHT]:
-                    var.me.moveRight()
-            
-            #绘制我方飞机
-            if var.me.active:
-                if var.switch_image:
-                    screen.blit(var.me.image1,var.me.rect)
-                else:
-                    screen.blit(var.me.image2,var.me.rect)
-                if var.me.invincible:
-                    screen.blit(
-                            var.me.shield,
-                            (var.me.rect.centerx - var.me.shield_rect.width // 2,
-                             var.me.rect.centery - var.me.shield_rect.height // 2))
+                        var.init(self)
+                    elif self.gameover_rect.collidepoint(pos):
+                        pygame.quit()
+                        sys.exit()
+## ----------------------------------------------------------------------------
             else:
-                #毁灭
-                if var.me.destroy_index == 0:
-                    me_down_sound.play()
-                screen.blit(var.me.destroy_images[var.me.destroy_index],var.me.rect)
-                if not(var.delay % 3):
-                    var.me.destroy_index = (var.me.destroy_index + 1) % 4
-                    if var.me.destroy_index == 0:
-                        var.life_num -= 1
-                        var.me.reset()
-                        var.update = False
-                        pygame.time.set_timer(INVINCIBLE_TIME, 3000)
-                        
-            #全屏炸弹效果
-            if var.me.bomb_action:
-                screen.blit(var.me.bomb_images[var.me.bomb_action_index], (0,0))
-                if not (var.delay % 6):
-                    var.me.bomb_action_index = (var.me.bomb_action_index + 1) % 6
-                    if not var.me.bomb_action_index:
-                        var.me.bomb_action = False
-            
-            #绘制子弹
-            if not (var.delay % 10) and (not var.paused):
-                bullet_sound.play()
-                if var.is_double:
-                    if var.update:
-                        var.bullets = var.bullet4
-                        var.bullets[var.bullet4_index].reset((var.me.rect.centerx-33,var.me.rect.centery))
-                        var.bullets[var.bullet4_index+1].reset((var.me.rect.centerx+30,var.me.rect.centery))
-                        var.bullet4_index = (var.bullet4_index + 2) % var.BULLET4_NUM
+                #boss背景
+                if self.boss_appear:
+                    self.screen.blit(self.boss_now.background,(0,0))
+                    
+                #暂停界面
+                if self.paused:
+                    self.screen.blit(self.pause_restart, self.pause_restart_rect)
+                    self.screen.blit(self.pause_quit, self.pause_quit_rect)
+                    if pygame.mouse.get_pressed()[0]:
+                        pos = pygame.mouse.get_pos()
+                        if self.pause_restart_rect.collidepoint(pos):
+                            init_thread = var.Initializer(self)
+                            init_thread.daemon = True
+                            init_thread.start()
+                            var.init(self)
+                        elif self.pause_quit_rect.collidepoint(pos):
+                            self.life_num = 0
+                    
+                if not self.paused:
+                    #检测键盘按键操作
+                    key_pressed = pygame.key.get_pressed()
+                    if key_pressed[gloc.K_w] or key_pressed[gloc.K_UP]:
+                        self.me.moveUp()
+                    if key_pressed[gloc.K_s] or key_pressed[gloc.K_DOWN]:
+                        self.me.moveDown()
+                    if key_pressed[gloc.K_a] or key_pressed[gloc.K_LEFT]:
+                        self.me.moveLeft()
+                    if key_pressed[gloc.K_d] or key_pressed[gloc.K_RIGHT]:
+                        self.me.moveRight()
+                
+                #绘制我方飞机
+                if self.me.active:
+                    if self.switch_image:
+                        self.screen.blit(self.me.image1, self.me.rect)
                     else:
-                        var.bullets = var.bullet2
-                        var.bullets[var.bullet2_index].reset((var.me.rect.centerx-33,var.me.rect.centery))
-                        var.bullets[var.bullet2_index+1].reset((var.me.rect.centerx+30,var.me.rect.centery))
-                        var.bullet2_index = (var.bullet2_index + 2) % var.BULLET2_NUM
+                        self.screen.blit(self.me.image2, self.me.rect)
+                    if self.me.invincible:
+                        self.screen.blit(
+                                self.me.shield,
+                                (self.me.rect.centerx - self.me.shield_rect.width // 2,
+                                 self.me.rect.centery - self.me.shield_rect.height // 2))
                 else:
-                    if var.update:
-                        var.bullets = var.bullet3
-                        var.bullets[var.bullet3_index].reset(var.me.rect.midtop)
-                        var.bullet3_index = (var.bullet3_index + 1) % var.BULLET3_NUM
-                    else:
-                        var.bullets = var.bullet1
-                        var.bullets[var.bullet1_index].reset(var.me.rect.midtop)
-                        var.bullet1_index = (var.bullet1_index + 1) % var.BULLET1_NUM
-            
-            #绘制炸弹
-            bomb_text = var.me.bomb_font.render('× %d' % var.me.bomb_num, True, WHITE)
-            screen.blit(var.me.bomb_image, (10, height - 10 - var.me.bomb_rect.height))
-            screen.blit(bomb_text, (20 + var.me.bomb_rect.width, height - 10 - var.me.bomb_rect.height))
-
-            #绘制剩余生命条数
-            if var.life_num:
-                for i in range(var.life_num):
-                    screen.blit(var.me.life_image, \
-                                (width-10-(i+1)*var.me.life_rect.width, \
-                                 height-10-var.me.life_rect.height))
-            #绘制得分
-            score_text = score_font.render('Score : %s' % str(var.score), True, WHITE)
-            screen.blit(score_text,(10,5))
-                
-            #绘制全屏炸弹补给包
-            if bomb_supply.active and not var.paused:
-                bomb_supply.move()
-                screen.blit(bomb_supply.image, bomb_supply.rect)
-                if pygame.sprite.collide_mask(bomb_supply, var.me):
-                    get_bomb_sound.play()
-                    if var.me.bomb_num < 3:
-                        var.me.bomb_num += 1
-                    bomb_supply.active = False
-
-            #绘制超级子弹补给包
-            if bullet_supply.active and not var.paused:
-                bullet_supply.move()
-                screen.blit(bullet_supply.image, bullet_supply.rect)
-                if pygame.sprite.collide_mask(bullet_supply, var.me):
-                    get_bullet_sound.play()
-                    var.is_double = True
-                    var.bullet1 = var.init_bullet(bullet.Bullet1, var.BULLET1_NUM, var.me.rect.midtop)
-                    var.bullet3 = var.init_bullet(bullet.Bullet3, var.BULLET3_NUM, var.me.rect.midtop)
-                    pygame.time.set_timer(DOUBLE_BULLET_TIME, 18000)
-                    bullet_supply.active = False
-                    
-            #绘制升级子弹补给包
-            if bullet_update.active and not var.paused:
-                bullet_update.move()
-                screen.blit(bullet_update.image, bullet_update.rect)
-                if pygame.sprite.collide_mask(bullet_update, var.me):
-                    get_bullet_sound.play()
-                    var.update = True
-                    var.bullet1 = var.init_bullet(bullet.Bullet1, var.BULLET1_NUM, var.me.rect.midtop)
-                    var.bullet2 = var.init_bullet(
-                        bullet.Bullet2,
-                        var.BULLET2_NUM,
-                        (var.me.rect.centerx-33, var.me.rect.centery),
-                        (var.me.rect.centerx+30, var.me.rect.centery))
-                    bullet_update.active = False
-            
-            #绘制医疗包
-            if medical_supply.active and not var.paused:
-                medical_supply.move()
-                screen.blit(medical_supply.image, medical_supply.rect)
-                if pygame.sprite.collide_mask(medical_supply, var.me):
-                    get_bomb_sound.play()
-                    if var.life_num < 3:
-                        var.life_num += 1
-                    medical_supply.active = False
-                    
-            #跟随时间加分
-            if not (var.delay % 60) and not var.paused:
-                var.score += 1000
-
-            #切换图片
-            if not (var.delay % 5) and not var.paused:
-                var.switch_image = not var.switch_image
-                
-            var.delay -= 1
-            if not var.delay:
-                var.delay = 100
-            
-## -------------------------------boss画面-------------------------------------
-            if var.boss_appear and (not var.paused) and (not var.transition):
-                #检测飞机碰撞
-                boss_down = pygame.sprite.spritecollide(var.me, var.boss_group, False, pygame.sprite.collide_mask)
-                if boss_down and not var.me.invincible:
-                    if var.boss_now.active:
-                        var.me.active = False
+                    #毁灭
+                    if self.me.destroy_index == 0:
+                        self.me_down_sound.play()
+                    self.screen.blit(self.me.destroy_images[self.me.destroy_index],self.me.rect)
+                    if not(self.delay % 3):
+                        self.me.destroy_index = (self.me.destroy_index + 1) % 4
+                        if self.me.destroy_index == 0:
+                            self.life_num -= 1
+                            self.me.reset()
+                            self.update = False
+                            pygame.time.set_timer(self.INVINCIBLE_TIME, 3000)
                             
-                #绘制boss
-                if var.boss_now.active:
-                    var.boss_now.move_in()
-                    var.boss_now.move()
-                    if var.boss_now.hit:
-                        screen.blit(var.boss_now.image_hit,var.boss_now.rect)
-                        var.boss_now.hit = False
-                    else:
-                        screen.blit(var.boss_now.image,var.boss_now.rect)
-                        
-                    #绘制血槽
-                    pygame.draw.line(
-                            screen,
-                            BLACK,
-                            (var.boss_now.rect.left, var.boss_now.rect.top - 5),
-                            (var.boss_now.rect.right,var.boss_now.rect.top - 5),
-                            4)
-                    boss_now_remain = var.boss_now.energy / var.boss_now.__class__.energy
-                    if boss_now_remain > 0.2:
-                        var.boss_now.energy_color = GREEN
-                    else:
-                        var.boss_now.energy_color = RED
-                    pygame.draw.line(
-                            screen,
-                            var.boss_now.energy_color,
-                            (var.boss_now.rect.left, var.boss_now.rect.top - 5),
-                            (var.boss_now.rect.left + var.boss_now.rect.width*boss_now_remain, var.boss_now.rect.top - 5),
-                            4)
-                else:
-                    for each in var.boss_bullet:
-                        each.active = False
-                    if random.choice([True, False]):
-                        bullet_update.reset()
-                    else:
-                        medical_supply.reset()
-                    var.boss_appear = False
-                    var.transition = True
-                    
-                #boss攻击
-                if (not var.delay % 70) and (var.boss_now.rect.top >= 53):
-                    var.boss_bullet[var.boss_bullet_index].reset(
-                            (var.boss_now.rect.centerx + random.randint(-100,40),
-                             var.boss_now.rect.centery)
-                        )
-                    var.boss_bullet_index = (var.boss_bullet_index + 1) % var.BOSS_BULLET_NUM
-                    
+                #全屏炸弹效果
+                if self.me.bomb_action:
+                    self.screen.blit(self.me.bomb_images[self.me.bomb_action_index], (0,0))
+                    if not (self.delay % 6):
+                        self.me.bomb_action_index = (self.me.bomb_action_index + 1) % 6
+                        if not self.me.bomb_action_index:
+                            self.me.bomb_action = False
                 
-                #检测是否击中敌机
-                for b in var.bullets:
-                    if b.active:
-                        b.move()
-                        screen.blit(b.image, b.rect)
-                        boss_hit = pygame.sprite.spritecollide(b, var.boss_group, False, pygame.sprite.collide_mask)
-                        if boss_hit:
-                            b.active = False
-                            var.boss_now.energy -= b.dmg
-                            var.boss_now.hit = True
-                            if var.boss_now.energy <=0:
-                                var.score += var.boss_now.score
-                                var.boss_now.active = False
-                                
-                #检测是否被击中
-                for b in var.boss_bullet:
-                    if b.active:
-                        b.move()
-                        screen.blit(b.image, b.rect)
-                        boss_bullet_hit = pygame.sprite.collide_mask(b, var.me)
-                        if boss_bullet_hit and not var.me.invincible:
-                            b.active = False
-                            var.me.active = False
+                #绘制子弹
+                if not (self.delay % 10) and (not self.paused):
+                    self.bullet_sound.play()
+                    if self.is_double:
+                        if self.update:
+                            self.bullets = self.bullet4
+                            self.bullets[self.bullet4_index].reset((self.me.rect.centerx-33,self.me.rect.centery))
+                            self.bullets[self.bullet4_index+1].reset((self.me.rect.centerx+30,self.me.rect.centery))
+                            self.bullet4_index = (self.bullet4_index + 2) % self.BULLET4_NUM
+                        else:
+                            self.bullets = self.bullet2
+                            self.bullets[self.bullet2_index].reset((self.me.rect.centerx-33,self.me.rect.centery))
+                            self.bullets[self.bullet2_index+1].reset((self.me.rect.centerx+30,self.me.rect.centery))
+                            self.bullet2_index = (self.bullet2_index + 2) % self.BULLET2_NUM
+                    else:
+                        if self.update:
+                            self.bullets = self.bullet3
+                            self.bullets[self.bullet3_index].reset(self.me.rect.midtop)
+                            self.bullet3_index = (self.bullet3_index + 1) % self.BULLET3_NUM
+                        else:
+                            self.bullets = self.bullet1
+                            self.bullets[self.bullet1_index].reset(self.me.rect.midtop)
+                            self.bullet1_index = (self.bullet1_index + 1) % self.BULLET1_NUM
+                
+                #绘制炸弹
+                bomb_text = self.me.bomb_font.render('× %d' % self.me.bomb_num, True, self.WHITE)
+                self.screen.blit(self.me.bomb_image, (10, height - 10 - self.me.bomb_rect.height))
+                self.screen.blit(bomb_text, (20 + self.me.bomb_rect.width, height - 10 - self.me.bomb_rect.height))
+    
+                #绘制剩余生命条数
+                if self.life_num:
+                    for i in range(self.life_num):
+                        self.screen.blit(self.me.life_image, \
+                                    (width-10-(i+1)*self.me.life_rect.width, \
+                                     height-10-self.me.life_rect.height))
+                #绘制得分
+                score_text = self.score_font.render('Score : %s' % str(self.score), True, self.WHITE)
+                self.screen.blit(score_text,(10,5))
                     
-## --------------------------------游戏画面------------------------------------
-            elif var.life_num and (not var.paused):
-                #检测飞机碰撞
-                enemies_down = pygame.sprite.spritecollide(var.me, var.enemies, False,pygame.sprite.collide_mask)
-                if enemies_down and not var.me.invincible:
-                    for each in enemies_down:
-                        if each.active:
-                            var.me.active = False
-                            each.active = False
+                #绘制全屏炸弹补给包
+                if self.bomb_supply.active and not self.paused:
+                    self.bomb_supply.move()
+                    self.screen.blit(self.bomb_supply.image, self.bomb_supply.rect)
+                    if pygame.sprite.collide_mask(self.bomb_supply, self.me):
+                        self.get_bomb_sound.play()
+                        if self.me.bomb_num < 3:
+                            self.me.bomb_num += 1
+                        self.bomb_supply.active = False
     
-                #绘制敌机
-                #大型敌机
-                for each in var.big_enemies:
-                    if each.active:
-                        each.move()
-                        if each.hit:
-                            screen.blit(each.image_hit,each.rect)
-                            each.hit = False
-                        else:
-                            if var.switch_image:
-                                screen.blit(each.image1,each.rect)
-                            else:
-                                screen.blit(each.image2,each.rect)
-                        #绘制血槽
-                        pygame.draw.line(
-                                screen,
-                                BLACK,
-                                (each.rect.left,each.rect.top - 5),
-                                (each.rect.right,each.rect.top - 5),
-                                2)
-                        big_energy_remain = each.energy / each.__class__.energy
-                        if big_energy_remain > 0.2:
-                            each.energy_color = GREEN
-                        else:
-                            each.energy_color = RED
-                        pygame.draw.line(
-                                screen,
-                                each.energy_color,
-                                (each.rect.left,each.rect.top - 5),
-                                (each.rect.left + each.rect.width*big_energy_remain,each.rect.top - 5),
-                                2)
+                #绘制超级子弹补给包
+                if self.bullet_supply.active and not self.paused:
+                    self.bullet_supply.move()
+                    self.screen.blit(self.bullet_supply.image, self.bullet_supply.rect)
+                    if pygame.sprite.collide_mask(self.bullet_supply, self.me):
+                        self.get_bullet_sound.play()
+                        self.is_double = True
+                        self.bullet1 = var.init_bullet(bullet.Bullet1, self.BULLET1_NUM, self.me.rect.midtop)
+                        self.bullet3 = var.init_bullet(bullet.Bullet3, self.BULLET3_NUM, self.me.rect.midtop)
+                        pygame.time.set_timer(self.DOUBLE_BULLET_TIME, 18000)
+                        self.bullet_supply.active = False
                         
-                        #大型提示音效
-                        if each.rect.bottom == -50:
-                            enemy3_fly_sound.play(-1)
-                    else:
-                        #毁灭
-                        if each.destroy_index == 0:
-                            enemy3_down_sound.play()
-                        screen.blit(each.destroy_images[each.destroy_index],each.rect)
-                        if not(var.delay % 3):
-                            each.destroy_index = (each.destroy_index + 1) % 6
-                            if each.destroy_index == 0:
-                                var.score += each.__class__.score
-                                enemy3_fly_sound.stop()
-                                each.reset()
-                    if each.rect.top == each.height:
-                        enemy3_fly_sound.stop()
+                #绘制升级子弹补给包
+                if self.bullet_update.active and not self.paused:
+                    self.bullet_update.move()
+                    self.screen.blit(self.bullet_update.image, self.bullet_update.rect)
+                    if pygame.sprite.collide_mask(self.bullet_update, self.me):
+                        self.get_bullet_sound.play()
+                        self.update = True
+                        self.bullet1 = var.init_bullet(bullet.Bullet1, self.BULLET1_NUM, self.me.rect.midtop)
+                        self.bullet2 = var.init_bullet(
+                            bullet.Bullet2,
+                            self.BULLET2_NUM,
+                            (self.me.rect.centerx-33, self.me.rect.centery),
+                            (self.me.rect.centerx+30, self.me.rect.centery))
+                        self.bullet_update.active = False
+                
+                #绘制医疗包
+                if self.medical_supply.active and not self.paused:
+                    self.medical_supply.move()
+                    self.screen.blit(self.medical_supply.image, self.medical_supply.rect)
+                    if pygame.sprite.collide_mask(self.medical_supply, self.me):
+                        self.get_bomb_sound.play()
+                        if self.life_num < 3:
+                            self.life_num += 1
+                        self.medical_supply.active = False
+                        
+                #跟随时间加分
+                if not (self.delay % 60) and not self.paused:
+                    self.score += 1000
     
-                #中型敌机
-                for each in var.mid_enemies:
-                    if each.active:
-                        each.move()
-                        if each.hit:
-                            screen.blit(each.image_hit,each.rect)
-                            each.hit = False
+                #切换图片
+                if not (self.delay % 5) and not self.paused:
+                    self.switch_image = not self.switch_image
+                    
+                self.delay -= 1
+                if not self.delay:
+                    self.delay = 100
+                
+## -------------------------------boss画面-------------------------------------
+                if self.boss_appear and (not self.paused) and (not self.transition):
+                    #检测飞机碰撞
+                    boss_down = pygame.sprite.spritecollide(self.me, self.boss_group, False, pygame.sprite.collide_mask)
+                    if boss_down and not self.me.invincible:
+                        if self.boss_now.active:
+                            self.me.active = False
+                                
+                    #绘制boss
+                    if self.boss_now.active:
+                        self.boss_now.move_in()
+                        self.boss_now.move()
+                        if self.boss_now.hit:
+                            self.screen.blit(self.boss_now.image_hit, self.boss_now.rect)
+                            self.boss_now.hit = False
                         else:
-                            screen.blit(each.image,each.rect)
+                            self.screen.blit(self.boss_now.image, self.boss_now.rect)
+                            
                         #绘制血槽
                         pygame.draw.line(
-                                screen,
-                                BLACK,
-                                (each.rect.left,each.rect.top - 5),
-                                (each.rect.right,each.rect.top - 5),
-                                2)
-                        mid_energy_remain = each.energy / enemy.MidEnemy.energy
-                        if mid_energy_remain > 0.2:
-                            each.energy_color = GREEN
+                                self.screen,
+                                self.BLACK,
+                                (self.boss_now.rect.left, self.boss_now.rect.top - 5),
+                                (self.boss_now.rect.right,self.boss_now.rect.top - 5),
+                                4)
+                        boss_now_remain = self.boss_now.energy / self.boss_now.__class__.energy
+                        if boss_now_remain > 0.2:
+                            self.boss_now.energy_color = self.GREEN
                         else:
-                            each.energy_color = RED
+                            self.boss_now.energy_color = self.RED
                         pygame.draw.line(
-                                screen,
-                                each.energy_color,
-                                (each.rect.left,each.rect.top - 5),
-                                (each.rect.left + each.rect.width * mid_energy_remain,each.rect.top - 5),
-                                2)
+                                self.screen,
+                                self.boss_now.energy_color,
+                                (self.boss_now.rect.left, self.boss_now.rect.top - 5),
+                                (self.boss_now.rect.left + self.boss_now.rect.width*boss_now_remain, self.boss_now.rect.top - 5),
+                                4)
                     else:
-                        #毁灭
-                        if each.destroy_index == 0:
-                            enemy2_down_sound.play()
-                        screen.blit(each.destroy_images[each.destroy_index],each.rect)
-                        if not(var.delay % 3):
-                            each.destroy_index = (each.destroy_index + 1) % 4
-                            if each.destroy_index == 0:
-                                var.score += each.__class__.score
-                                each.reset()
-    
-                #小型敌机
-                for each in var.small_enemies:
-                    if each.active:
-                        each.move()
-                        screen.blit(each.image,each.rect)
-                    else:
-                        #毁灭
-                        if not(var.delay % 3):
-                            if each.destroy_index == 0:
-                                enemy1_down_sound.play()
-                            screen.blit(each.destroy_images[each.destroy_index],each.rect)
-                            each.destroy_index = (each.destroy_index + 1) % 4
-                            if each.destroy_index == 0:
-                                var.score += each.__class__.score
-                                each.reset()
-    
-                #检测是否击中敌机
-                if var.bullets:
-                    for b in var.bullets:
+                        for each in self.boss_bullet:
+                            each.active = False
+                        if random.choice([True, False]):
+                            self.bullet_update.reset()
+                        else:
+                            self.medical_supply.reset()
+                        self.boss_appear = False
+                        self.transition = True
+                        
+                    #boss攻击
+                    if (not self.delay % 70) and (self.boss_now.rect.top >= 53):
+                        self.boss_bullet[self.boss_bullet_index].reset(
+                                (self.boss_now.rect.centerx + random.randint(-100,40),
+                                 self.boss_now.rect.centery)
+                            )
+                        self.boss_bullet_index = (self.boss_bullet_index + 1) % self.BOSS_BULLET_NUM
+                        
+                    
+                    #检测是否击中敌机
+                    for b in self.bullets:
                         if b.active:
                             b.move()
-                            screen.blit(b.image, b.rect)
-                            enemy_hit = pygame.sprite.spritecollide(b, var.enemies, False, pygame.sprite.collide_mask)
-                            if enemy_hit:
+                            self.screen.blit(b.image, b.rect)
+                            boss_hit = pygame.sprite.spritecollide(b, self.boss_group, False, pygame.sprite.collide_mask)
+                            if boss_hit:
                                 b.active = False
-                                for e in enemy_hit:
-                                    if e in var.mid_enemies or e in var.big_enemies:
-                                        e.hit = True
-                                        e.energy -= b.dmg
-                                        if e.energy <= 0:
+                                self.boss_now.energy -= b.dmg
+                                self.boss_now.hit = True
+                                if self.boss_now.energy <=0:
+                                    self.score += self.boss_now.score
+                                    self.boss_now.active = False
+                                    
+                    #检测是否被击中
+                    for b in self.boss_bullet:
+                        if b.active:
+                            b.move()
+                            self.screen.blit(b.image, b.rect)
+                            boss_bullet_hit = pygame.sprite.collide_mask(b, self.me)
+                            if boss_bullet_hit and not self.me.invincible:
+                                b.active = False
+                                self.me.active = False
+                        
+## --------------------------------游戏画面------------------------------------
+                elif self.life_num and (not self.paused):
+                    #检测飞机碰撞
+                    enemies_down = pygame.sprite.spritecollide(self.me, self.enemies, False,pygame.sprite.collide_mask)
+                    if enemies_down and not self.me.invincible:
+                        for each in enemies_down:
+                            if each.active:
+                                self.me.active = False
+                                each.active = False
+        
+                    #绘制敌机
+                    #大型敌机
+                    for each in self.big_enemies:
+                        if each.active:
+                            each.move()
+                            if each.hit:
+                                self.screen.blit(each.image_hit,each.rect)
+                                each.hit = False
+                            else:
+                                if self.switch_image:
+                                    self.screen.blit(each.image1,each.rect)
+                                else:
+                                    self.screen.blit(each.image2,each.rect)
+                            #绘制血槽
+                            pygame.draw.line(
+                                    self.screen,
+                                    self.BLACK,
+                                    (each.rect.left,each.rect.top - 5),
+                                    (each.rect.right,each.rect.top - 5),
+                                    2)
+                            big_energy_remain = each.energy / each.__class__.energy
+                            if big_energy_remain > 0.2:
+                                each.energy_color = self.GREEN
+                            else:
+                                each.energy_color = self.RED
+                            pygame.draw.line(
+                                    self.screen,
+                                    each.energy_color,
+                                    (each.rect.left,each.rect.top - 5),
+                                    (each.rect.left + each.rect.width*big_energy_remain,each.rect.top - 5),
+                                    2)
+                            
+                            #大型提示音效
+                            if each.rect.bottom == -50:
+                                self.enemy3_fly_sound.play(-1)
+                        else:
+                            #毁灭
+                            if each.destroy_index == 0:
+                                self.enemy3_down_sound.play()
+                            self.screen.blit(each.destroy_images[each.destroy_index],each.rect)
+                            if not(self.delay % 3):
+                                each.destroy_index = (each.destroy_index + 1) % 6
+                                if each.destroy_index == 0:
+                                    self.score += each.__class__.score
+                                    self.enemy3_fly_sound.stop()
+                                    each.reset()
+                        if each.rect.top == each.height:
+                            self.enemy3_fly_sound.stop()
+        
+                    #中型敌机
+                    for each in self.mid_enemies:
+                        if each.active:
+                            each.move()
+                            if each.hit:
+                                self.screen.blit(each.image_hit,each.rect)
+                                each.hit = False
+                            else:
+                                self.screen.blit(each.image,each.rect)
+                            #绘制血槽
+                            pygame.draw.line(
+                                    self.screen,
+                                    self.BLACK,
+                                    (each.rect.left,each.rect.top - 5),
+                                    (each.rect.right,each.rect.top - 5),
+                                    2)
+                            mid_energy_remain = each.energy / enemy.MidEnemy.energy
+                            if mid_energy_remain > 0.2:
+                                each.energy_color = self.GREEN
+                            else:
+                                each.energy_color = self.RED
+                            pygame.draw.line(
+                                    self.screen,
+                                    each.energy_color,
+                                    (each.rect.left,each.rect.top - 5),
+                                    (each.rect.left + each.rect.width * mid_energy_remain,each.rect.top - 5),
+                                    2)
+                        else:
+                            #毁灭
+                            if each.destroy_index == 0:
+                                self.enemy2_down_sound.play()
+                            self.screen.blit(each.destroy_images[each.destroy_index],each.rect)
+                            if not(self.delay % 3):
+                                each.destroy_index = (each.destroy_index + 1) % 4
+                                if each.destroy_index == 0:
+                                    self.score += each.__class__.score
+                                    each.reset()
+        
+                    #小型敌机
+                    for each in self.small_enemies:
+                        if each.active:
+                            each.move()
+                            self.screen.blit(each.image,each.rect)
+                        else:
+                            #毁灭
+                            if not(self.delay % 3):
+                                if each.destroy_index == 0:
+                                    self.enemy1_down_sound.play()
+                                self.screen.blit(each.destroy_images[each.destroy_index],each.rect)
+                                each.destroy_index = (each.destroy_index + 1) % 4
+                                if each.destroy_index == 0:
+                                    self.score += each.__class__.score
+                                    each.reset()
+        
+                    #检测是否击中敌机
+                    if self.bullets:
+                        for b in self.bullets:
+                            if b.active:
+                                b.move()
+                                self.screen.blit(b.image, b.rect)
+                                enemy_hit = pygame.sprite.spritecollide(b, self.enemies, False, pygame.sprite.collide_mask)
+                                if enemy_hit:
+                                    b.active = False
+                                    for e in enemy_hit:
+                                        if e in self.mid_enemies or e in self.big_enemies:
+                                            e.hit = True
+                                            e.energy -= b.dmg
+                                            if e.energy <= 0:
+                                                e.active = False
+                                        else:
                                             e.active = False
-                                    else:
-                                        e.active = False
-
-        #绘制暂停按钮
-        screen.blit(paused_image,paused_rect)
-
-        pygame.display.flip()
-        clock.tick(60)
+    
+            #绘制暂停按钮
+            self.screen.blit(self.paused_image,self.paused_rect)
+    
+            pygame.display.flip()
+            clock.tick(60)
 
 if __name__ == '__main__':
     try:
-        main()
+        game = Game()
     except SystemExit:
         pass
     except:
