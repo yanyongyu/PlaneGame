@@ -21,13 +21,44 @@ import supply
 import sql
 
 bg_size = width, height = 480, 700
+destroy_images = {}
+transitional_image = {}
 
 #生成敌方飞机
-def add_enemies(fn: pygame.sprite.Sprite,
+def add_enemies(fn: str,
                 num: int,
                 *args: pygame.sprite.Group) -> None:
+    fn_images = fn.lower()
     for i in range(num):
-        e = fn(bg_size)
+        if not fn_images in destroy_images:
+            print("-------------------------load enemy-----------------------")
+            if fn_images == "smallenemy":
+                exec(("""
+                     %s = [
+                             pygame.image.load('images/enemies/enemy1_down1.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy1_down2.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy1_down3.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy1_down4.png').convert_alpha()
+                         ]""" % fn_images).strip(), globals(), destroy_images)
+            elif fn_images == "midenemy":
+                exec(("""
+                     %s = [
+                             pygame.image.load('images/enemies/enemy2_down1.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy2_down2.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy2_down3.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy2_down4.png').convert_alpha()
+                         ]""" % fn_images).strip(), globals(), destroy_images)
+            elif fn_images == "bigenemy":
+                exec(("""
+                     %s = [
+                             pygame.image.load('images/enemies/enemy3_down1.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy3_down2.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy3_down3.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy3_down4.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy3_down5.png').convert_alpha(),
+                             pygame.image.load('images/enemies/enemy3_down6.png').convert_alpha()
+                         ]""" % fn_images).strip(), globals(), destroy_images)
+        e = eval("enemy.%s(bg_size, destroy_images['%s'])" % (fn, fn_images))
         for group in args:
             if isinstance(group, pygame.sprite.Group):
                 group.add(e)
@@ -42,9 +73,192 @@ def init_bullet(fn: pygame.sprite.Sprite,
             bullets.append(fn(each, bg_size))
     return bullets
 
+#生成boss
+def init_boss(fn: str) -> pygame.sprite.Sprite:
+    fn_images = fn.lower()
+    if not fn_images in destroy_images:
+        print("---------------------------load boss--------------------------")
+        if fn_images == "boss_lv1":
+            exec(("""
+                 %s = [
+                         pygame.image.load('boss/lv1/1.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/2.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/3.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/4.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/5.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/6.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/7.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/8.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/9.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/10.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/11.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/12.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/13.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/14.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/15.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/16.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/17.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/18.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/19.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/20.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/21.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/22.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/23.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/23_1.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/23_2.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/23_3.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/24.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/25.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/26.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/27.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/28.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/29.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/30.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/31.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/32.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/33.png').convert_alpha()
+                     ]""" % fn_images).strip(), globals(), transitional_image)
+            exec(("""
+                 %s = [
+                         pygame.image.load('boss/lv1/end_1.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_2.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_3.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_4.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_5.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_6.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_7.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_8.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_9.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_10.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_11.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_12.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_13.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_14.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_15.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_16.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_17.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_18.png').convert_alpha(),
+                         pygame.image.load('boss/lv1/end_19.png').convert_alpha()
+                     ]""" % fn_images).strip(), globals(), destroy_images)
+        elif fn_images == "boss_lv2":
+            exec(("""
+                 %s = [
+                         pygame.image.load('boss/lv2/1.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/2.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/4.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/5.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/6.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/8.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/9.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/10.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/11.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/12.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/13.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/14.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/15.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/16.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/17.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/18.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/19.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/20.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/21.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/22.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/23.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/24.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/24_1.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/24_2.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/24_3.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/25.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/26.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/27.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/28.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/29.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/30.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/31.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/32.png').convert_alpha()
+                     ]""" % fn_images).strip(), globals(), transitional_image)
+            exec(("""
+                 %s = [
+                         pygame.image.load('boss/lv2/end_1.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_2.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_3.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_4.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_5.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_6.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_7.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_8.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_9.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_10.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_11.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_12.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_13.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_14.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_15.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_16.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_17.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_18.png').convert_alpha(),
+                         pygame.image.load('boss/lv2/end_19.png').convert_alpha()
+                     ]""" % fn_images).strip(), globals(), destroy_images)
+        elif fn_images == "boss_lv3":
+            exec(("""
+                 %s = [
+                         pygame.image.load('boss/lv3/1.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/2.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/4.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/5.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/6.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/8.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/9.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/10.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/11.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/12.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/13.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/14.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/15.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/16.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/17.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/18.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/19.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/20.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/20_1.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/20_2.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/20_3.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/21.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/22.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/23.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/24.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/25.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/26.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/27.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/28.png').convert_alpha()
+                     ]""" % fn_images).strip(), globals(), transitional_image)
+            exec(("""
+                 %s = [
+                         pygame.image.load('boss/lv3/end_1.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_2.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_3.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_4.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_5.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_6.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_7.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_8.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_9.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_10.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_11.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_12.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_13.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_14.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_15.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_16.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_17.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_18.png').convert_alpha(),
+                         pygame.image.load('boss/lv3/end_19.png').convert_alpha()
+                     ]""" % fn_images).strip(), globals(), destroy_images)
+    return eval("boss.%s(bg_size, transitional_image['%s'], destroy_images['%s'])" % (fn, fn_images, fn_images))
+
 #选择音乐，可选播放
-def change_music(boss: bool=False, play: bool=True) -> None:
-    if not boss:
+def change_music(boss_appear: bool=False, play: bool=True) -> None:
+    if not boss_appear:
         pygame.mixer.music.load('sound/game_music.ogg')
     else:
         if random.choice([True,False]):
@@ -210,13 +424,13 @@ class Initializer(threading.Thread):
         self.game.enemies = pygame.sprite.Group()
         #小型飞机
         self.game.small_enemies = pygame.sprite.Group()
-        add_enemies(enemy.SmallEnemy, 15, self.game.small_enemies, self.game.enemies)
+        add_enemies("SmallEnemy", 15, self.game.small_enemies, self.game.enemies)
         #中型飞机
         self.game.mid_enemies = pygame.sprite.Group()
-        add_enemies(enemy.MidEnemy, 4, self.game.mid_enemies, self.game.enemies)
+        add_enemies("MidEnemy", 4, self.game.mid_enemies, self.game.enemies)
         #大型飞机
         self.game.big_enemies = pygame.sprite.Group()
-        add_enemies(enemy.BigEnemy, 2, self.game.big_enemies, self.game.enemies)
+        add_enemies("BigEnemy", 2, self.game.big_enemies, self.game.enemies)
         
         #生成普通子弹
         self.game.bullet1_index = 0
@@ -247,9 +461,9 @@ class Initializer(threading.Thread):
         #生成boss
         self.game.boss_now = None
         self.game.boss_group = pygame.sprite.Group()
-        self.game.boss_lv1 = boss.Boss_lv1(bg_size)
-        self.game.boss_lv2 = boss.Boss_lv2(bg_size)
-        self.game.boss_lv3 = boss.Boss_lv3(bg_size)
+        self.game.boss_lv1 = init_boss("Boss_lv1")
+        self.game.boss_lv2 = init_boss("Boss_lv2")
+        self.game.boss_lv3 = init_boss("Boss_lv3")
         self.game.boss_group.add(self.game.boss_lv1, self.game.boss_lv2, self.game.boss_lv3)
         
         #生成boss子弹

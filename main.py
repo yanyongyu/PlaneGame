@@ -14,7 +14,6 @@ import traceback
 import pygame
 import pygame.locals as gloc
 
-import enemy
 import bullet
 import sql
 import variables as var
@@ -64,7 +63,7 @@ class Game():
         self.enemy2_down_sound = pygame.mixer.Sound('sound/enemy2_down.wav')
         self.enemy2_down_sound.set_volume(0.2)
         self.enemy3_down_sound = pygame.mixer.Sound('sound/enemy3_down.wav')
-        self.enemy3_down_sound.set_volume(0.5)
+        self.enemy3_down_sound.set_volume(0.4)
         self.me_down_sound = pygame.mixer.Sound('sound/me_down.wav')
         self.me_down_sound.set_volume(0.2)
 
@@ -187,9 +186,9 @@ class Game():
                 self.level = 2
                 self.upgrade_sound.play()
                 #增加3架小型飞机，2架中型飞机，1架大型飞机
-                var.add_enemies(enemy.SmallEnemy, 3, self.small_enemies, self.enemies)
-                var.add_enemies(enemy.MidEnemy, 2, self.mid_enemies, self.enemies)
-                var.add_enemies(enemy.BigEnemy, 1, self.big_enemies, self.enemies)
+                var.add_enemies("SmallEnemy", 3, self.small_enemies, self.enemies)
+                var.add_enemies("MidEnemy", 2, self.mid_enemies, self.enemies)
+                var.add_enemies("BigEnemy", 1, self.big_enemies, self.enemies)
                 #提升速度
                 var.inc_speed(self.small_enemies, 1)
     
@@ -197,9 +196,9 @@ class Game():
                 self.level = 3
                 self.upgrade_sound.play()
                 #增加5架小型飞机，3架中型飞机，2架大型飞机
-                var.add_enemies(enemy.SmallEnemy, 5, self.small_enemies, self.enemies)
-                var.add_enemies(enemy.MidEnemy, 3, self.mid_enemies, self.enemies)
-                var.add_enemies(enemy.BigEnemy, 2, self.big_enemies, self.enemies)
+                var.add_enemies("SmallEnemy", 5, self.small_enemies, self.enemies)
+                var.add_enemies("MidEnemy", 3, self.mid_enemies, self.enemies)
+                var.add_enemies("BigEnemy", 2, self.big_enemies, self.enemies)
                 #提升速度
                 var.inc_speed(self.small_enemies, 1)
                 var.inc_speed(self.mid_enemies, 1)
@@ -208,9 +207,9 @@ class Game():
                 self.level = 4
                 self.upgrade_sound.play()
                 #增加5架小型飞机，3架中型飞机，2架大型飞机
-                var.add_enemies(enemy.SmallEnemy, 5, self.small_enemies, self.enemies)
-                var.add_enemies(enemy.MidEnemy, 3, self.mid_enemies, self.enemies)
-                var.add_enemies(enemy.BigEnemy, 2, self.big_enemies, self.enemies)
+                var.add_enemies("SmallEnemy", 5, self.small_enemies, self.enemies)
+                var.add_enemies("MidEnemy", 3, self.mid_enemies, self.enemies)
+                var.add_enemies("BigEnemy", 2, self.big_enemies, self.enemies)
                 #提升速度
                 var.inc_speed(self.small_enemies, 1)
                 var.inc_speed(self.mid_enemies, 1)
@@ -219,9 +218,9 @@ class Game():
                 self.level = 5
                 self.upgrade_sound.play()
                 #增加5架小型飞机，3架中型飞机，2架大型飞机
-                var.add_enemies(enemy.SmallEnemy, 5, self.small_enemies, self.enemies)
-                var.add_enemies(enemy.MidEnemy, 3, self.mid_enemies, self.enemies)
-                var.add_enemies(enemy.BigEnemy, 2, self.big_enemies, self.enemies)
+                var.add_enemies("SmallEnemy", 5, self.small_enemies, self.enemies)
+                var.add_enemies("MidEnemy", 3, self.mid_enemies, self.enemies)
+                var.add_enemies("BigEnemy", 2, self.big_enemies, self.enemies)
                 #提升速度
                 var.inc_speed(self.small_enemies, 1)
                 var.inc_speed(self.mid_enemies, 1)
@@ -712,7 +711,7 @@ class Game():
                                     (each.rect.left,each.rect.top - 5),
                                     (each.rect.right,each.rect.top - 5),
                                     2)
-                            mid_energy_remain = each.energy / enemy.MidEnemy.energy
+                            mid_energy_remain = each.energy / each.__class__.energy
                             if mid_energy_remain > 0.2:
                                 each.energy_color = self.GREEN
                             else:
