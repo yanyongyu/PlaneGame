@@ -28,37 +28,33 @@ transitional_image = {}
 def add_enemies(fn: str,
                 num: int,
                 *args: pygame.sprite.Group) -> None:
-    fn_images = fn.lower()
+    global destroy_images
     for i in range(num):
-        if not fn_images in destroy_images:
-            print("-------------------------load enemy-----------------------")
-            if fn_images == "smallenemy":
-                exec(("""
-                     %s = [
+        if not fn in destroy_images:
+            if fn == "SmallEnemy":
+                destroy_images[fn] = [
                              pygame.image.load('images/enemies/enemy1_down1.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy1_down2.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy1_down3.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy1_down4.png').convert_alpha()
-                         ]""" % fn_images).strip(), globals(), destroy_images)
-            elif fn_images == "midenemy":
-                exec(("""
-                     %s = [
+                         ]
+            elif fn == "MidEnemy":
+                destroy_images[fn] = [
                              pygame.image.load('images/enemies/enemy2_down1.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy2_down2.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy2_down3.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy2_down4.png').convert_alpha()
-                         ]""" % fn_images).strip(), globals(), destroy_images)
-            elif fn_images == "bigenemy":
-                exec(("""
-                     %s = [
+                         ]
+            elif fn == "BigEnemy":
+                destroy_images[fn] = [
                              pygame.image.load('images/enemies/enemy3_down1.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy3_down2.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy3_down3.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy3_down4.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy3_down5.png').convert_alpha(),
                              pygame.image.load('images/enemies/enemy3_down6.png').convert_alpha()
-                         ]""" % fn_images).strip(), globals(), destroy_images)
-        e = eval("enemy.%s(bg_size, destroy_images['%s'])" % (fn, fn_images))
+                         ]
+        e = eval("enemy.%s(bg_size, destroy_images[fn])" % fn)
         for group in args:
             if isinstance(group, pygame.sprite.Group):
                 group.add(e)
