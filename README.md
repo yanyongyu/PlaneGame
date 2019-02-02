@@ -21,7 +21,7 @@ Run in the Window System which has the Python environment.
 3.Open the Python shell and run the main.py in module.
 
 
-4. The game interface named "飞机大战"will pop out in a few seconds.
+4.The game interface named "飞机大战"will pop out in a few seconds.
 
 
 5.Click "帮助" Button for the way to control player's plane.
