@@ -43,7 +43,7 @@ The limited number of Booms and Player's life is 3. After 3 lives are used up, t
 
 There are 3 levels from the boss enemies (plane). Their appearences and blood amount will be different.
 
-The best score can be recorded in the game system by using SqQL method.
+The best score can be recorded in the game system by using SQL method.
 
 ### Built With
 PYTHON - the programming language
