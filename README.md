@@ -2,7 +2,7 @@
 PlaneGame using python/pygame, sqlite, threading
 Mainly created by yanyongyu, tested by terrryzhuo110
 
-# Prerequisites
+## Prerequisites
 
 Run in the Window System which has the Python environment.
 
