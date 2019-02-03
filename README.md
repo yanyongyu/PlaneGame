@@ -60,7 +60,7 @@ Yongyu Yan - Initial work
 Yue Zhuo - Information update
 
 ### License
-This project is licensed under the MIT License - see the LICENSE.md file for details
+This project is licensed under the MIT License - see the LICENSE file for details
 
 ### Acknowledgments
 Hat tip to anyone whose code was used
