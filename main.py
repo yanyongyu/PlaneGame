@@ -20,11 +20,11 @@ import variables as var
 
 class Game():
     def __init__(self):
-        #初始化
+        # 初始化
         pygame.init()
         pygame.mixer.init()
         pygame.mixer.set_num_channels(16)
-        self.bg_size = width, height = 480, 700
+        self.bg_size = self.width, self.height = 480, 700
         self.screen = pygame.display.set_mode(self.bg_size)
         pygame.display.set_caption('飞机大战')
         icon = pygame.image.load('images/icon.gif').convert()
@@ -34,8 +34,16 @@ class Game():
         self.GREEN = (0,255,0)
         self.RED = (255,0,0)
         self.WHITE = (255,255,255)
+        
+        init_thread = var.Initializer(self)
+        init_thread.daemon = True
+        init_thread.start()
+        var.init(self)
+        self.init_sound()
+        self.init_pic()
 
-        #载入音乐，音效
+    # 载入音乐，音效
+    def init_sound(self):
         pygame.mixer.music.set_volume(0.2)
 
         self.bullet_sound = pygame.mixer.Sound('sound/bullet.wav')
@@ -66,20 +74,27 @@ class Game():
         self.enemy3_down_sound.set_volume(0.4)
         self.me_down_sound = pygame.mixer.Sound('sound/me_down.wav')
         self.me_down_sound.set_volume(0.2)
+        
+    def init_pic(self):
+        self.help_image1 = pygame.image.load('images/help/help1.png').convert_alpha()
+        self.help_image2 = pygame.image.load('images/help/help2.png').convert_alpha()
+        self.back_image1 = pygame.image.load('images/help/back1.png').convert_alpha()
+        self.back_image2 = pygame.image.load('images/help/back2.png').convert_alpha()
 
-        #主程序
-        init_thread = var.Initializer(self)
-        init_thread.daemon = True
-        init_thread.start()
+    # 主程序
+    def play(self):
         clock = pygame.time.Clock()
-        running = True
-        var.init(self)
     
-        while running:
+        while True:
             for event in pygame.event.get():
                 if event.type == gloc.QUIT:
                     pygame.quit()
                     sys.exit()
+                    
+                #己方飞机无敌计时
+                elif event.type == self.INVINCIBLE_TIME:
+                    self.me.invincible = False
+                    pygame.time.set_timer(self.INVINCIBLE_TIME, 0)
     
                 #发放补给包
                 elif event.type == self.SUPPLY_TIME:
@@ -148,27 +163,59 @@ class Game():
                             pygame.mixer.music.unpause()
                             pygame.mixer.unpause()
     
-                #己方飞机无敌计时
-                elif event.type == self.INVINCIBLE_TIME:
-                    self.me.invincible = False
-                    pygame.time.set_timer(self.INVINCIBLE_TIME, 0)
-    
                 #检测鼠标暂停操作
                 elif event.type == gloc.MOUSEBUTTONDOWN:
-                    if event.button == 1 and self.paused_rect.collidepoint(event.pos):
-                        self.paused = not self.paused
-                        if self.paused:
-                            self.paused_image = self.resume_pressed_image
-                            self.paused_time = time.time()
-                            pygame.time.set_timer(self.SUPPLY_TIME, 0)
-                            pygame.mixer.music.pause()
-                            pygame.mixer.pause()
-                        else:
-                            self.paused_image = self.pause_pressed_image
-                            if not self.start and not self._help:
-                                pygame.time.set_timer(self.SUPPLY_TIME, 30000-round((self.paused_time-self.supply_time)*1000))
-                            pygame.mixer.music.unpause()
-                            pygame.mixer.unpause()
+                    if event.button == 1:
+                        pos = event.pos
+                        # 暂停操作
+                        if self.paused_rect.collidepoint(pos):
+                            self.paused = not self.paused
+                            if self.paused:
+                                self.paused_image = self.resume_pressed_image
+                                self.paused_time = time.time()
+                                pygame.time.set_timer(self.SUPPLY_TIME, 0)
+                                pygame.mixer.music.pause()
+                                pygame.mixer.pause()
+                            else:
+                                self.paused_image = self.pause_pressed_image
+                                if not self.start and not self._help:
+                                    pygame.time.set_timer(self.SUPPLY_TIME, 30000-round((self.paused_time-self.supply_time)*1000))
+                                pygame.mixer.music.unpause()
+                                pygame.mixer.unpause()
+                                
+                        # 开始画面
+                        elif self.start and not self._help:
+                            if self.start_rect.collidepoint(pos):
+                                self.start = False
+                                if self.paused:
+                                    self.paused = False
+                                    self.paused_image = self.pause_pressed_image
+                                    pygame.mixer.music.unpause()
+                                    pygame.mixer.unpause()
+                                self.supply_time = time.time()
+                                pygame.time.set_timer(self.SUPPLY_TIME, 30000)
+                            elif self.help_rect.collidepoint(pos):
+                                self._help = True
+                            elif self.exit_rect.collidepoint(pos):
+                                pygame.quit()
+                                sys.exit()
+                                
+                        # 帮助画面
+                        elif self._help:
+                            if self.back_image1.get_rect().collidepoint(pos):
+                                self._help = False
+                                
+                        # 游戏结束画面
+                        elif self.life_num == 0:
+                            if self.again_rect.collidepoint(pos):
+                                init_thread = var.Initializer(self)
+                                init_thread.daemon = True
+                                init_thread.start()
+                                var.init(self)
+                            elif self.gameover_rect.collidepoint(pos):
+                                pygame.quit()
+                                sys.exit()
+                            
                 elif event.type == gloc.MOUSEMOTION:
                     if self.paused_rect.collidepoint(event.pos):
                         if self.paused:
@@ -266,35 +313,15 @@ class Game():
                 
                 record_score_text = self.score_font.render('Best : %d' % self.record_score, True, self.WHITE)
                 self.screen.blit(record_score_text, (50,50))
-                if pygame.mouse.get_pressed()[0]:
-                    pos = pygame.mouse.get_pos()
-                    if self.start_rect.collidepoint(pos):
-                        self.start = False
-                        if self.paused:
-                            self.paused = False
-                            self.paused_image = self.pause_pressed_image
-                            pygame.mixer.music.unpause()
-                            pygame.mixer.unpause()
-                        self.supply_time = time.time()
-                        pygame.time.set_timer(self.SUPPLY_TIME, 30000)
-                    elif self.help_rect.collidepoint(pos):
-                        self._help = True
-                    elif self.exit_rect.collidepoint(pos):
-                        pygame.quit()
-                        sys.exit()
                         
 ## --------------------------------帮助画面------------------------------------
             elif self._help:
-                help_image1 = pygame.image.load('images/help/help1.png').convert_alpha()
-                help_image2 = pygame.image.load('images/help/help2.png').convert_alpha()
-                back_image1 = pygame.image.load('images/help/back1.png').convert_alpha()
-                back_image2 = pygame.image.load('images/help/back2.png').convert_alpha()
                 if self.switch_image:
-                    self.screen.blit(help_image1, (10,0))
-                    self.screen.blit(back_image1, (0,0))
+                    self.screen.blit(self.help_image1, (10,0))
+                    self.screen.blit(self.back_image1, (0,0))
                 else:
-                    self.screen.blit(help_image2, (10,0))
-                    self.screen.blit(back_image2, (0,0))
+                    self.screen.blit(self.help_image2, (10,0))
+                    self.screen.blit(self.back_image2, (0,0))
                     
                 #切换图片
                 if not (self.delay % 5):
@@ -302,11 +329,6 @@ class Game():
                 self.delay -= 1
                 if not self.delay:
                     self.delay = 100
-                    
-                if pygame.mouse.get_pressed()[0]:
-                    pos = pygame.mouse.get_pos()
-                    if back_image1.get_rect().collidepoint(pos):
-                        self._help = False
             
 ## --------------------------------背景过渡------------------------------------
             elif self.transition:
@@ -371,30 +393,24 @@ class Game():
                 
                 gameover_text1 = self.gameover_font.render('Your Score', True, self.WHITE)
                 gameover_text1_rect = gameover_text1.get_rect()
-                gameover_text1_rect.left, gameover_text1_rect.top = (width - gameover_text1_rect.width) // 2, height // 3
+                gameover_text1_rect.left = (self.width - gameover_text1_rect.width) // 2
+                gameover_text1_rect.top = self.height // 3
                 self.screen.blit(gameover_text1, gameover_text1_rect)
                 
                 gameover_text2 = self.gameover_font.render(str(self.score), True, self.WHITE)
                 gameover_text2_rect = gameover_text2.get_rect()
-                gameover_text2_rect.left, gameover_text2_rect.top = (width - gameover_text2_rect.width) // 2, gameover_text1_rect.bottom + 10
+                gameover_text2_rect.left = (self.width - gameover_text2_rect.width) // 2
+                gameover_text2_rect.top = gameover_text1_rect.bottom + 10
                 self.screen.blit(gameover_text2, gameover_text2_rect)
                 
-                self.again_rect.left, self.again_rect.top = (width - self.again_rect.width) // 2, gameover_text2_rect.bottom + 50
+                self.again_rect.left = (self.width - self.again_rect.width) // 2
+                self.again_rect.top = gameover_text2_rect.bottom + 50
                 self.screen.blit(self.again_image, self.again_rect)
                 
-                self.gameover_rect.left = (width - self.gameover_rect.width) // 2
+                self.gameover_rect.left = (self.width - self.gameover_rect.width) // 2
                 self.gameover_rect.top = self.again_rect.bottom + 10
                 self.screen.blit(self.gameover_image, self.gameover_rect)
-                if pygame.mouse.get_pressed()[0]:
-                    pos = pygame.mouse.get_pos()
-                    if self.again_rect.collidepoint(pos):
-                        init_thread = var.Initializer(self)
-                        init_thread.daemon = True
-                        init_thread.start()
-                        var.init(self)
-                    elif self.gameover_rect.collidepoint(pos):
-                        pygame.quit()
-                        sys.exit()
+                
 ## ----------------------------------------------------------------------------
             else:
                 #boss背景
@@ -485,15 +501,18 @@ class Game():
                 
                 #绘制炸弹
                 bomb_text = self.me.bomb_font.render('× %d' % self.me.bomb_num, True, self.WHITE)
-                self.screen.blit(self.me.bomb_image, (10, height - 10 - self.me.bomb_rect.height))
-                self.screen.blit(bomb_text, (20 + self.me.bomb_rect.width, height - 10 - self.me.bomb_rect.height))
+                self.screen.blit(self.me.bomb_image, (10, self.height - 10 - self.me.bomb_rect.height))
+                self.screen.blit(bomb_text,
+                                 (20 + self.me.bomb_rect.width,
+                                  self.height - 10 - self.me.bomb_rect.height)
+                                )
     
                 #绘制剩余生命条数
                 if self.life_num:
                     for i in range(self.life_num):
                         self.screen.blit(self.me.life_image, \
-                                    (width-10-(i+1)*self.me.life_rect.width, \
-                                     height-10-self.me.life_rect.height))
+                                    (self.width-10-(i+1)*self.me.life_rect.width, \
+                                     self.height-10-self.me.life_rect.height))
                 #绘制得分
                 score_text = self.score_font.render('Score : %s' % str(self.score), True, self.WHITE)
                 self.screen.blit(score_text,(10,5))
@@ -776,6 +795,7 @@ class Game():
 if __name__ == '__main__':
     try:
         game = Game()
+        game.play()
     except SystemExit:
         pass
     except:
