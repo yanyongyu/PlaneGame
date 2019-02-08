@@ -27,7 +27,7 @@ class Game():
         self.bg_size = self.width, self.height = 480, 700
         self.screen = pygame.display.set_mode(self.bg_size)
         pygame.display.set_caption('飞机大战')
-        icon = pygame.image.load('images/icon.gif').convert()
+        icon = pygame.image.load('images/icon.ico')
         pygame.display.set_icon(icon)
         self.background = pygame.image.load('images/background.png').convert()
         self.BLACK = (0,0,0)
