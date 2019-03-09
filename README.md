@@ -1,3 +1,7 @@
+![GitHub](https://img.shields.io/github/license/yanyongyu/PlaneGame.svg)
+![GitHub All Releases](https://img.shields.io/github/downloads/yanyongyu/PlaneGame/total.svg)
+![GitHub repo size in bytes](https://img.shields.io/github/repo-size/yanyongyu/PlaneGame.svg)
+
 # PlaneGame
 PlaneGame using python/pygame, sqlite, threading
 Mainly created by yanyongyu, tested by terrryzhuo110
